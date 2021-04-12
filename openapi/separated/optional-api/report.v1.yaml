@@ -1,0 +1,266 @@
+openapi: 3.0.0
+info:
+  title: UsagiBooru Report API
+  version: '2.0'
+  contact:
+    name: Omado
+    url: 'https://twitter.com/shallow_omado'
+    email: dsgamer777@gmail.com
+  description: |-
+    通報関連API
+    (Optional)
+  license:
+    name: GPLv3
+    url: 'https://www.gnu.org/licenses/gpl-3.0.ja.html'
+servers:
+  - url: 'http://127.0.0.1:8080'
+    description: Dev
+paths:
+  '/report/arts/{artID}':
+    parameters:
+      - schema:
+          type: integer
+        name: artID
+        in: path
+        required: true
+        description: 対象のイラストID
+    post:
+      summary: Report art
+      tags:
+        - report
+      operationId: reportArt
+      description: |-
+        指定したイラストを運営に通報します
+        むやみに利用するとアカウントが停止される可能性があります
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostReportGeneralRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+  '/report/tags/{tagID}':
+    parameters:
+      - schema:
+          type: integer
+        name: tagID
+        in: path
+        required: true
+        description: 対象のタグID
+    post:
+      summary: Report tag
+      tags:
+        - report
+      operationId: reportTag
+      description: |-
+        指定したタグを運営に通報します
+        むやみに利用するとアカウントが停止される可能性があります
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostReportGeneralRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+  '/report/user/{accountID}':
+    parameters:
+      - schema:
+          type: integer
+        name: accountID
+        in: path
+        required: true
+        description: 対象のアカウントID
+    post:
+      summary: Report user
+      tags:
+        - report
+      operationId: reportUser
+      description: |-
+        指定したユーザーを運営に通報します
+        むやみに利用するとアカウントが停止される可能性があります
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostReportGeneralRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+  '/report/wiki/{articleID}':
+    parameters:
+      - schema:
+          type: integer
+        name: articleID
+        in: path
+        required: true
+        description: 対象の記事ID
+    post:
+      summary: Report article
+      tags:
+        - report
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      operationId: reportArticle
+      description: |-
+        指定した記事を運営に通報します
+        むやみに利用するとアカウントが停止される可能性があります
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostReportGeneralRequest'
+components:
+  schemas:
+    PostReportGeneralRequest:
+      title: ReportGeneralRequest
+      type: object
+      x-examples:
+        example-1:
+          type: bad-name
+          msg: XSSしようとしてる人が居るみたいです、なんとかしてください
+        example-2:
+          type: wrong-info
+          msg: どうみてもエッチですあーいけません!
+        example-3:
+          type: violation-rules
+          msg: 完全に同一の画像を上げ続け、運営を妨害している人が居ます
+        example-4:
+          type: dmca
+          msg: DMCA Request
+      properties:
+        type:
+          type: string
+          description: '通報種別 1:不適切名称 2:不適切年齢 3:規約違反 4:法律違反'
+          enum:
+            - bad-name
+            - wrong-info
+            - violation-rules
+            - dmca
+          example: bad-name
+          default: bad-name
+        msg:
+          type: string
+          description: 通報本文
+          minLength: 1
+      required:
+        - type
+        - msg
+    GeneralMessageResponse:
+      title: GeneralMessageResponse
+      type: object
+      properties:
+        message:
+          type: string
+          description: 応答メッセージ(何が間違っているかの詳細)
+          minLength: 1
+      required:
+        - message
+      x-examples:
+        not-found:
+          message: Specified content was not found.
+        no-permission:
+          message: You don't have enough permission to do it.
+        bad-request:
+          message: Your request body is wrong.
+        locked:
+          message: Specified content is referenced from other content.
+  parameters: {}
+  securitySchemes:
+    Authorization:
+      type: http
+      scheme: bearer
+tags:
+  - name: report
+security:
+  - Authorization: []

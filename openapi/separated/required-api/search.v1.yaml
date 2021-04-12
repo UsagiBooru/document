@@ -1,0 +1,1432 @@
+openapi: 3.0.0
+info:
+  title: UsagiBooru Search API
+  version: '2.0'
+  contact:
+    name: Omado
+    url: 'https://twitter.com/shallow_omado'
+    email: dsgamer777@gmail.com
+  description: 検索関連API
+  license:
+    name: GPLv3
+    url: 'https://www.gnu.org/licenses/gpl-3.0.ja.html'
+servers:
+  - url: 'http://127.0.0.1:8080'
+    description: Dev
+paths:
+  /search/tag:
+    get:
+      summary: Search by tag
+      tags:
+        - search
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSearchGeneralResponse'
+              examples: {}
+      operationId: searchArtByTag
+      description: 指定したタグを持つイラスト一覧を取得します
+      parameters:
+        - $ref: '#/components/parameters/SearchQuerySort'
+        - $ref: '#/components/parameters/SearchQueryOrder'
+        - $ref: '#/components/parameters/SearchQueryPage'
+        - schema:
+            type: integer
+          in: query
+          name: id
+          description: タグID
+          required: true
+        - $ref: '#/components/parameters/SearchQueryMylistAllow'
+        - $ref: '#/components/parameters/SearchQueryPerPage'
+  /search/artist:
+    get:
+      summary: Search by artist
+      tags:
+        - search
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSearchGeneralResponse'
+              examples:
+                example:
+                  value:
+                    status: 200
+                    message: found
+                    data:
+                      title: みふね
+                      count: 4
+                      current: 1
+                      pages: 1
+                      imgs:
+                        - artID: 4
+                          artistID: 1
+                          title: 社畜のイラスト
+                          caption: 会社に飼い慣らされ家畜のように扱われている男性会社員（サラリーマン）、俗にいう社畜のイラストです。
+                          date: '2021-01-07 14:53:43'
+                          pages: 1
+                          like: 1
+                          mylist: 0
+                          mylisted: false
+                          originUrl: '?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 1
+                            name: みふね
+                          extension: png
+                        - artID: 3
+                          artistID: 1
+                          title: なかなか当たらないガチャのイラスト
+                          caption: 当たりが出る確率がとても低いガチャガチャを回し続けている人のイラストです。
+                          date: '2021-01-07 14:51:59'
+                          pages: 1
+                          like: 1
+                          mylist: 0
+                          mylisted: false
+                          originUrl: 'https://www.irasutoya.com/2016/02/blog-post_256.html?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 1
+                            name: みふね
+                          extension: png
+                        - artID: 2
+                          artistID: 1
+                          title: 単位を落とす学生のイラスト（男性）
+                          caption: 大学生の男の子が単位を落として焦っているイラストです。
+                          date: '2021-01-07 12:53:04'
+                          pages: 1
+                          like: 2
+                          mylist: 0
+                          mylisted: false
+                          originUrl: 'https://www.irasutoya.com/2016/10/blog-post_23.html?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 1
+                            name: みふね
+                          extension: png
+                        - artID: 1
+                          artistID: 1
+                          title: パソコンのキャラクター（ノートパソコン）(笑顔)
+                          caption: |
+                            快調に動く笑顔のノート型のコンピューターと、壊れて困った顔をしているコンピューターのイラストです。
+                          date: '2021-01-07 12:31:01'
+                          pages: 1
+                          like: 53
+                          mylist: 1
+                          mylisted: false
+                          originUrl: 'https://www.irasutoya.com/2017/01/blog-post_792.html?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 1
+                            name: みふね
+                          extension: png
+      operationId: searchArtByArtist
+      description: 指定した絵師のイラスト一覧を取得します
+      parameters:
+        - $ref: '#/components/parameters/SearchQuerySort'
+        - $ref: '#/components/parameters/SearchQueryOrder'
+        - $ref: '#/components/parameters/SearchQueryPage'
+        - schema:
+            type: integer
+          in: query
+          name: id
+          description: 絵師ID
+          required: true
+        - $ref: '#/components/parameters/SearchQueryMylistAllow'
+        - $ref: '#/components/parameters/SearchQueryPerPage'
+  /search/mylist:
+    get:
+      summary: Search by mylist
+      tags:
+        - search
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSearchGeneralResponse'
+              examples:
+                example:
+                  value:
+                    status: 200
+                    message: found
+                    data:
+                      title: みふね
+                      count: 4
+                      current: 1
+                      pages: 1
+                      imgs:
+                        - artID: 4
+                          artistID: 1
+                          title: 社畜のイラスト
+                          caption: 会社に飼い慣らされ家畜のように扱われている男性会社員（サラリーマン）、俗にいう社畜のイラストです。
+                          date: '2021-01-07 14:53:43'
+                          pages: 1
+                          like: 1
+                          mylist: 0
+                          mylisted: false
+                          originUrl: '?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 1
+                            name: みふね
+                          extension: png
+                        - artID: 3
+                          artistID: 1
+                          title: なかなか当たらないガチャのイラスト
+                          caption: 当たりが出る確率がとても低いガチャガチャを回し続けている人のイラストです。
+                          date: '2021-01-07 14:51:59'
+                          pages: 1
+                          like: 1
+                          mylist: 0
+                          mylisted: false
+                          originUrl: 'https://www.irasutoya.com/2016/02/blog-post_256.html?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 1
+                            name: みふね
+                          extension: png
+                        - artID: 2
+                          artistID: 1
+                          title: 単位を落とす学生のイラスト（男性）
+                          caption: 大学生の男の子が単位を落として焦っているイラストです。
+                          date: '2021-01-07 12:53:04'
+                          pages: 1
+                          like: 2
+                          mylist: 0
+                          mylisted: false
+                          originUrl: 'https://www.irasutoya.com/2016/10/blog-post_23.html?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 1
+                            name: みふね
+                          extension: png
+                        - artID: 1
+                          artistID: 1
+                          title: パソコンのキャラクター（ノートパソコン）(笑顔)
+                          caption: |
+                            快調に動く笑顔のノート型のコンピューターと、壊れて困った顔をしているコンピューターのイラストです。
+                          date: '2021-01-07 12:31:01'
+                          pages: 1
+                          like: 53
+                          mylist: 1
+                          mylisted: false
+                          originUrl: 'https://www.irasutoya.com/2017/01/blog-post_792.html?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 1
+                            name: みふね
+                          extension: png
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      operationId: searchArtByMylist
+      description: 指定したマイリストのイラスト一覧を取得します
+      parameters:
+        - $ref: '#/components/parameters/SearchQuerySort'
+        - $ref: '#/components/parameters/SearchQueryOrder'
+        - $ref: '#/components/parameters/SearchQueryPage'
+        - schema:
+            type: integer
+          in: query
+          name: id
+          description: マイリストID
+          required: true
+        - $ref: '#/components/parameters/SearchQueryMylistAllow'
+        - $ref: '#/components/parameters/SearchQueryPerPage'
+  /search/keyword:
+    get:
+      summary: Search by keyword
+      tags:
+        - search
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSearchGeneralResponse'
+              examples:
+                example:
+                  value:
+                    status: 200
+                    message: found
+                    data:
+                      title: cafe
+                      count: 1
+                      current: 1
+                      pages: 1
+                      imgs:
+                        - artID: 6
+                          artistID: 3
+                          title: Cafe Image
+                          caption: Ready for the breakfast rush to start
+                          date: '2021-01-07 15:01:01'
+                          pages: 1
+                          like: 1
+                          mylist: 0
+                          mylisted: false
+                          originUrl: 'https://unsplash.com/photos/dwQRixazu9I?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 3
+                            name: Andy Falconer
+                          extension: jpg
+      operationId: searchArtByKeyword
+      description: 指定したキーワードを含むイラスト一覧を取得します
+      parameters:
+        - $ref: '#/components/parameters/SearchQuerySort'
+        - $ref: '#/components/parameters/SearchQueryOrder'
+        - $ref: '#/components/parameters/SearchQueryPage'
+        - schema:
+            type: string
+            example: cafe
+          in: query
+          name: keyword
+          description: 検索対象ワード
+          required: true
+        - $ref: '#/components/parameters/SearchQueryMylistAllow'
+        - $ref: '#/components/parameters/SearchQueryPerPage'
+  /search/all:
+    get:
+      summary: Search all arts
+      tags:
+        - search
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSearchGeneralResponse'
+              examples:
+                example:
+                  value:
+                    status: 200
+                    message: found
+                    data:
+                      title: 全て
+                      count: 8
+                      current: 1
+                      pages: 1
+                      imgs:
+                        - artID: 8
+                          artistID: 5
+                          title: tea pours into white teacup photo
+                          caption: ''
+                          date: '2021-01-07 15:16:58'
+                          pages: 1
+                          like: 1
+                          mylist: 0
+                          mylisted: false
+                          originUrl: 'https://unsplash.com/photos/oBoELXgJR1w?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 5
+                            name: CHI CHEN
+                          extension: jpg
+                        - artID: 7
+                          artistID: 4
+                          title: clear glass cup with tea near brown ceramic teapot
+                          caption: ''
+                          date: '2021-01-07 15:15:28'
+                          pages: 1
+                          like: 1
+                          mylist: 1
+                          mylisted: true
+                          originUrl: 'https://unsplash.com/photos/L82-kkEBOd0?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 4
+                            name: Manki Kim
+                          extension: jpg
+                        - artID: 6
+                          artistID: 3
+                          title: Cafe Image
+                          caption: Ready for the breakfast rush to start
+                          date: '2021-01-07 15:01:01'
+                          pages: 1
+                          like: 1
+                          mylist: 0
+                          mylisted: false
+                          originUrl: 'https://unsplash.com/photos/dwQRixazu9I?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 3
+                            name: Andy Falconer
+                          extension: jpg
+                        - artID: 5
+                          artistID: 2
+                          title: top view photography of heart latte coffee photo
+                          caption: Cappuccino in a bed of fresh roasted coffee beans.
+                          date: '2021-01-07 14:56:37'
+                          pages: 1
+                          like: 1
+                          mylist: 0
+                          mylisted: false
+                          originUrl: 'https://unsplash.com/photos/XOhI_kW_TaM?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 2
+                            name: Nathan Dumlao
+                          extension: jpg
+                        - artID: 4
+                          artistID: 1
+                          title: 社畜のイラスト
+                          caption: 会社に飼い慣らされ家畜のように扱われている男性会社員（サラリーマン）、俗にいう社畜のイラストです。
+                          date: '2021-01-07 14:53:43'
+                          pages: 1
+                          like: 1
+                          mylist: 0
+                          mylisted: false
+                          originUrl: '?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 1
+                            name: みふね
+                          extension: png
+                        - artID: 3
+                          artistID: 1
+                          title: なかなか当たらないガチャのイラスト
+                          caption: 当たりが出る確率がとても低いガチャガチャを回し続けている人のイラストです。
+                          date: '2021-01-07 14:51:59'
+                          pages: 1
+                          like: 1
+                          mylist: 0
+                          mylisted: false
+                          originUrl: 'https://www.irasutoya.com/2016/02/blog-post_256.html?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 1
+                            name: みふね
+                          extension: png
+                        - artID: 2
+                          artistID: 1
+                          title: 単位を落とす学生のイラスト（男性）
+                          caption: 大学生の男の子が単位を落として焦っているイラストです。
+                          date: '2021-01-07 12:53:04'
+                          pages: 1
+                          like: 2
+                          mylist: 0
+                          mylisted: false
+                          originUrl: 'https://www.irasutoya.com/2016/10/blog-post_23.html?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 1
+                            name: みふね
+                          extension: png
+                        - artID: 1
+                          artistID: 1
+                          title: パソコンのキャラクター（ノートパソコン）(笑顔)
+                          caption: |
+                            快調に動く笑顔のノート型のコンピューターと、壊れて困った顔をしているコンピューターのイラストです。
+                          date: '2021-01-07 12:31:01'
+                          pages: 1
+                          like: 53
+                          mylist: 1
+                          mylisted: false
+                          originUrl: 'https://www.irasutoya.com/2017/01/blog-post_792.html?page=1'
+                          originService: 独自
+                          nsfw: false
+                          artist:
+                            id: 1
+                            name: みふね
+                          extension: png
+      operationId: searchArtByAll
+      description: 登録されたイラスト一覧を取得します
+      parameters:
+        - $ref: '#/components/parameters/SearchQuerySort'
+        - $ref: '#/components/parameters/SearchQueryOrder'
+        - $ref: '#/components/parameters/SearchQueryPage'
+        - $ref: '#/components/parameters/SearchQueryMylistAllow'
+        - $ref: '#/components/parameters/SearchQueryPerPage'
+  /search/random:
+    get:
+      summary: Search by random
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSearchGeneralResponse'
+      operationId: searchArtByRandom
+      description: ランダムなイラストを1つ取得します
+      tags:
+        - search
+      parameters:
+        - $ref: '#/components/parameters/SearchQueryMylistAllow'
+        - $ref: '#/components/parameters/SearchQueryPerPage'
+  /search/image/self:
+    post:
+      summary: Search by image
+      tags:
+        - search
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostSearchByImageResponse'
+      operationId: searchArtByImage
+      description: 画像からごちイラ内に登録されたイラストを検索します
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostSearchByImageRequest'
+    parameters: []
+  /search/image/saucenao:
+    post:
+      summary: Search by image at saucenao
+      tags:
+        - search
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostSearchByImageAtSauceNaoResponse'
+      operationId: searchArtByImageUsingSaucenao
+      description: 画像からSauceNAOに登録されたイラストを検索します
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostSearchByImageRequest'
+  /search/uploaders:
+    get:
+      summary: Search by uploader
+      tags:
+        - search
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSearchGeneralResponse'
+      operationId: searchArtByUploader
+      description: 指定した投稿者のイラスト一覧を取得します
+      parameters:
+        - $ref: '#/components/parameters/SearchQuerySort'
+        - $ref: '#/components/parameters/SearchQueryOrder'
+        - $ref: '#/components/parameters/SearchQueryPage'
+        - $ref: '#/components/parameters/SearchQueryMylistAllow'
+  /search/image/ascii2d:
+    post:
+      summary: Search by image at ascii2d
+      tags:
+        - search
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostSearchByImageAtAscii2dResponse'
+      operationId: searchArtByImageUsingAscii2d
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostSearchByImageRequest'
+      description: 画像からAscii2dに登録されたイラストを検索します
+  /search/tag/multiple:
+    get:
+      summary: Search by multiple tag
+      tags:
+        - search
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSearchGeneralResponse'
+      operationId: searchArtByMultipleTag
+      description: |-
+        複数のタグを指定してイラストを検索します
+        アカウントのレベルによって指定できる数は変動します(予定)
+      parameters:
+        - $ref: '#/components/parameters/SearchQuerySort'
+        - $ref: '#/components/parameters/SearchQueryOrder'
+        - $ref: '#/components/parameters/SearchQueryPage'
+        - schema:
+            type: string
+          in: query
+          name: id
+          description: タグIDをカンマ区切りで複数指定します
+        - $ref: '#/components/parameters/SearchQueryMylistAllow'
+        - $ref: '#/components/parameters/SearchQueryPerPage'
+    parameters: []
+  /search/timeline:
+    get:
+      summary: Get timeline
+      tags:
+        - search
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSearchGeneralResponse'
+      operationId: getTimeline
+      parameters:
+        - $ref: '#/components/parameters/SearchQuerySort'
+        - $ref: '#/components/parameters/SearchQueryOrder'
+        - $ref: '#/components/parameters/SearchQueryPage'
+        - schema:
+            type: integer
+          in: query
+          name: id
+          description: ユーザーID
+        - $ref: '#/components/parameters/SearchQueryPerPage'
+      description: タイムラインを取得します
+    parameters: []
+components:
+  schemas:
+    GetSearchGeneralResponse:
+      description: ''
+      type: object
+      title: GetSearchGeneralResponse
+      x-examples:
+        example:
+          pagination:
+            title: 香風智乃
+            type: art
+            count: 1
+            current: 1
+            pages: 1
+            perPage: 20
+          contents:
+            - artID: 1
+              title: 魔法少女は深淵になにをみるか？
+              caption: Ｃ８９の新刊表紙となっていますっ
+              datetime: '2015-12-27T07:29:00Z'
+              page: 1
+              likes: 0
+              views: 0
+              mylists: 0
+              mylisted: false
+              uploader:
+                accountID: 1
+                name: お窓
+              artists:
+                - artistID: 1
+                  name: 彩電
+              originUrl: 'https://www.pixiv.net/artworks/54265978'
+              originService: Pixiv
+              nsfw: false
+              file:
+                ipfsHash:
+                  thumb: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                  orig: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+              similarity: 0
+      properties:
+        pagination:
+          $ref: '#/components/schemas/PaginationStruct'
+        contents:
+          type: array
+          items:
+            $ref: '#/components/schemas/LightArtStruct'
+    GeneralMessageResponse:
+      title: GeneralMessageResponse
+      type: object
+      properties:
+        message:
+          type: string
+          description: 応答メッセージ(何が間違っているかの詳細)
+          minLength: 1
+      required:
+        - message
+      x-examples:
+        not-found:
+          message: Specified content was not found.
+        no-permission:
+          message: You don't have enough permission to do it.
+        bad-request:
+          message: Your request body is wrong.
+        locked:
+          message: Specified content is referenced from other content.
+    PostSearchByImageRequest:
+      title: PostSearchByImageRequest
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+          description: 画像ファイル(binary)
+      required:
+        - file
+    PostSearchByImageResponse:
+      title: PostSearchByImageResponse
+      type: object
+      x-examples:
+        example-1:
+          hash: string
+          illusts:
+            - artID: 1
+              title: 魔法少女は深淵になにをみるか？
+              caption: Ｃ８９の新刊表紙となっていますっ
+              datetime: '2015-12-27T07:29:00Z'
+              page: 1
+              likes: 0
+              views: 0
+              mylists: 0
+              mylisted: false
+              uploader:
+                accountID: 1
+                name: お窓
+              artists:
+                - artistID: 1
+                  name: 彩電
+              originUrl: 'https://www.pixiv.net/artworks/54265978'
+              originService: Pixiv
+              nsfw: false
+              file:
+                ipfsHash:
+                  thumb: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                  orig: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+              similarity: 0
+      properties:
+        hash:
+          type: string
+          example: DUMMY_IMAGE_HASH
+          minLength: 1
+          maxLength: 100
+        illusts:
+          type: array
+          items:
+            $ref: '#/components/schemas/LightArtStruct'
+      required:
+        - hash
+        - illusts
+    PostSearchByImageAtSauceNaoResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          result:
+            - header:
+                similarity: '77.83'
+                thumbnail: 'https://img3.saucenao.com/booru/3/a/3ab0ed13bd3ec3a8622382a240db3b74_1.jpg?auth=Tu4qnVHPxVwiXxVzMoJhWw&exp=1615921200'
+                index_id: 12
+                index_name: 'Index #12: Yande.re - 3ab0ed13bd3ec3a8622382a240db3b74_1.jpg'
+                dupes: 0
+              data:
+                ext_urls:
+                  - 'https://yande.re/post/show/647138'
+                yandere_id: 647138
+                creator: azumi kazuki
+                material: ''
+                characters: ''
+                source: '(C98) [Come Through (Adumi Kazuki)] Honey Sweet'
+            - header:
+                similarity: '95.17'
+                thumbnail: 'https://img3.saucenao.com/booru/b/c/bca7ec8627098a725c1ec1c33effc352_0.jpg?auth=r3KiiJle_Y6fdX2Bhh268Q&exp=1615921200'
+                index_id: 9
+                index_name: 'Index #9: Danbooru - bca7ec8627098a725c1ec1c33effc352_0.jpg'
+                dupes: 1
+              data:
+                ext_urls:
+                  - 'https://danbooru.donmai.us/post/show/3890236'
+                  - 'https://gelbooru.com/index.php?page=post&s=view&id=5273065'
+                danbooru_id: 3890236
+                gelbooru_id: 5273065
+                creator: azumi kazuki
+                material: 'clockwork rabbit, gochuumon wa usagi desu ka?'
+                characters: 'kafuu chino, tippy (gochiusa)'
+                source: 'https://twitter.com/kazukiadumi/status/1256528892409470976'
+            - header:
+                similarity: '77.99'
+                thumbnail: 'https://img3.saucenao.com/ehentai/35/5a/355a28ea90722d3152d2b77da5ad73160ca7f41c.jpg?auth=oewNFWX4UIC3tRM2Z3m2lQ&exp=1615921200'
+                index_id: 38
+                index_name: 'Index #38: H-Misc (E-Hentai) - 355a28ea90722d3152d2b77da5ad73160ca7f41c.jpg'
+                dupes: 1
+              data:
+                source: Honey Sweet
+                creator:
+                  - adumi kazuki
+                  - come through
+                eng_name: '[Come Through (Adumi Kazuki)] Honey Sweet'
+                jp_name: '[Come Through (あづみ一樹)] Honey Sweet'
+            - header:
+                similarity: '51.24'
+                thumbnail: 'https://img1.saucenao.com/res/pixiv/8571/manga/85711213_p2.jpg?auth=8Acmlg43E4OKbzO1ulq-nw&exp=1615921200'
+                index_id: 5
+                index_name: 'Index #5: Pixiv Images - 85711213_p2.jpg'
+                dupes: 0
+              data:
+                ext_urls:
+                  - 'https://www.pixiv.net/member_illust.php?mode=medium&illust_id=85711213'
+                title: まとめ
+                pixiv_id: 85711213
+                member_name: みずみず子
+                member_id: 7955474
+            - header:
+                similarity: '50.74'
+                thumbnail: 'https://img1.saucenao.com/res/nhentai/32697%20%28142225%29%20--%20%5BHirose%20Miho%5D%20Oneesan%20to%20Issho/119.jpg?auth=ez1hhJY60BbS-3Ge7xl4CQ&exp=1615921200'
+                index_id: 18
+                index_name: 'Index #18: H-Misc (nhentai) - 119.jpg'
+                dupes: 1
+              data:
+                source: Oneesan to Issho
+                creator:
+                  - hidiri rei
+                  - hirose miho
+                eng_name: '[Hirose Miho] Oneesan to Issho'
+                jp_name: '[ひろせみほ] おねえさんといっしょ'
+            - header:
+                similarity: '50.6'
+                thumbnail: 'https://img3.saucenao.com/furaffinity/1336/13361739.jpg?auth=QGLqamng93PFvd-UPObysw&exp=1615921200'
+                index_id: 40
+                index_name: 'Index #40: FurAffinity - 13361739.jpg'
+                dupes: 0
+              data:
+                ext_urls:
+                  - 'https://www.furaffinity.net/view/13361739'
+                title: Nurse Aras to the Rescue
+                fa_id: 13361739
+                author_name: KuroiNekoMiko
+                author_url: 'https://www.furaffinity.net/user/kuroinekomiko'
+            - header:
+                similarity: '50.48'
+                thumbnail: 'https://img1.saucenao.com/res/mangadex/824/824357/R15.jpg?auth=RFr2ldvSaiFIIxiII821-A&exp=1615921200'
+                index_id: 37
+                index_name: 'Index #37: MangaDex - R15.jpg'
+                dupes: 0
+              data:
+                ext_urls:
+                  - 'https://mangadex.org/chapter/824357/'
+                  - 'https://www.mangaupdates.com/series.html?id=371'
+                  - 'https://myanimelist.net/manga/1439/'
+                md_id: 824357
+                mu_id: 371
+                mal_id: 1439
+                source: Sex Pistols
+                part: ' - Chapter 30'
+                artist: KOTOBUKI Tarako
+                author: KOTOBUKI Tarako
+            - header:
+                similarity: '50.2'
+                thumbnail: 'https://img1.saucenao.com/res/pixiv/7858/manga/78582114_p9.jpg?auth=NxnkYsm8LdvXpgqcC08qbQ&exp=1615921200'
+                index_id: 5
+                index_name: 'Index #5: Pixiv Images - 78582114_p9.jpg'
+                dupes: 0
+              data:
+                ext_urls:
+                  - 'https://www.pixiv.net/member_illust.php?mode=medium&illust_id=78582114'
+                title: 期間限定Web投稿（12/31まで）
+                pixiv_id: 78582114
+                member_name: 長谷川
+                member_id: 7961579
+            - header:
+                similarity: '49.70'
+                thumbnail: 'https://img1.saucenao.com/res/pixiv/2030/manga/20309973_p2.jpg?auth=goBwjyvoTMaPAvGy3KNmqQ&exp=1615921200'
+                index_id: 5
+                index_name: 'Index #5: Pixiv Images - 20309973_p2.jpg'
+                dupes: 0
+              data:
+                ext_urls:
+                  - 'https://www.pixiv.net/member_illust.php?mode=medium&illust_id=20309973'
+                title: 忍者じゃなイカ？　～多勢に無勢～
+                pixiv_id: 20309973
+                member_name: shen
+                member_id: 1172007
+            - header:
+                similarity: '49.68'
+                thumbnail: 'https://img1.saucenao.com/res/pixiv/5400/manga/54003307_p5.jpg?auth=eBHYI20wET5PE8fNw8ftPw&exp=1615921200'
+                index_id: 5
+                index_name: 'Index #5: Pixiv Images - 54003307_p5.jpg'
+                dupes: 0
+              data:
+                ext_urls:
+                  - 'https://www.pixiv.net/member_illust.php?mode=medium&illust_id=54003307'
+                title: 出轟+αまとめ3/再販のお知らせ
+                pixiv_id: 54003307
+                member_name: くろい
+                member_id: 3807881
+      title: PostSearchByImageAtSauceNaoResponse
+      properties:
+        result:
+          type: array
+          uniqueItems: true
+          minItems: 1
+          items:
+            type: object
+            properties:
+              header:
+                type: object
+                properties:
+                  similarity:
+                    type: string
+                    minLength: 1
+                    description: 類似度(100.00~0.00までのfloatを文字列にしたもの)
+                  thumbnail:
+                    type: string
+                    minLength: 1
+                    description: サムネイル画像(直アクセス可能)
+                  index_id:
+                    type: integer
+                    description: 参照したデータベースID
+                  index_name:
+                    type: string
+                    minLength: 1
+                    description: 参照したデータベース名
+                  dupes:
+                    type: integer
+                    description: 不明
+                required:
+                  - similarity
+                  - thumbnail
+                  - index_id
+                  - index_name
+                  - dupes
+              data:
+                type: object
+                description: 参照したDBによる異なる追加データ
+                properties:
+                  ext_urls:
+                    type: array
+                    description: 出典URL(出せる場合)
+                    items:
+                      type: object
+                  yandere_id:
+                    type: integer
+                  creator:
+                    type: string
+                    minLength: 1
+                  material:
+                    type: string
+                  characters:
+                    type: string
+                  source:
+                    type: string
+                    minLength: 1
+            required:
+              - data
+    PostSearchByImageAtAscii2dResponse:
+      description: ''
+      type: object
+      x-examples:
+        success:
+          url: 'https://ascii2d.net/search/color/e7e09e7cb091cc31ae12a67661e391d5'
+          result:
+            - hash: 379bf76fe1aeff3c4aff68404d717e59
+              size: 1146x2048 JPEG 245.3KB
+              thumbnail: /thumbnail/3/7/9/b/379bf76fe1aeff3c4aff68404d717e59.jpg
+              title: 2020.04.24
+              artist: Pizzzica
+              urls:
+                source: 'https://twitter.com/Pizzzica/status/1253620903805505536'
+                artist: 'https://twitter.com/intent/user?user_id=1099287362570350592'
+            - hash: 15e8b2af81e8451fd6852170f428d0f1
+              size: twitter
+              thumbnail: /thumbnail/1/5/e/8/15e8b2af81e8451fd6852170f428d0f1.jpg
+              title: リプラビチノちゃん
+              artist: ぴちかー
+              urls:
+                source: 'https://www.pixiv.net/artworks/81029831'
+                artist: 'https://www.pixiv.net/users/38405227'
+            - hash: 379bf76fe1aeff3c4aff68404d717e59
+              size: 1146x2048 JPEG 245.3KB
+              thumbnail: /thumbnail/3/7/9/b/379bf76fe1aeff3c4aff68404d717e59.jpg
+              title: 2020.04.24
+              artist: Pizzzica
+              urls:
+                source: 'https://twitter.com/Pizzzica/status/1253620903805505536'
+                artist: 'https://twitter.com/intent/user?user_id=1099287362570350592'
+            - hash: 15e8b2af81e8451fd6852170f428d0f1
+              size: twitter
+              thumbnail: /thumbnail/1/5/e/8/15e8b2af81e8451fd6852170f428d0f1.jpg
+              title: リプラビチノちゃん
+              artist: ぴちかー
+              urls:
+                source: 'https://www.pixiv.net/artworks/81029831'
+                artist: 'https://www.pixiv.net/users/38405227'
+            - hash: d382dcb19944b9d712cdca81c65f1d10
+              size: 1944x3505 PNG 4837.4KB
+              thumbnail: /thumbnail/d/3/8/2/d382dcb19944b9d712cdca81c65f1d10.jpg
+              title: 銀高（お蔵出し）Log　R-18
+              artist: なゆ子
+              urls:
+                source: 'https://www.pixiv.net/artworks/55205947'
+                artist: 'https://www.pixiv.net/users/3696997'
+            - hash: b4ee05347efd6c8041ce0444ba335af5
+              size: 481x836 JPEG 306.6KB
+              thumbnail: /thumbnail/b/4/e/e/b4ee05347efd6c8041ce0444ba335af5.jpg
+              title: 2018.12.09
+              artist: askh559
+              urls:
+                source: 'https://twitter.com/askh559/status/1071684395239493633'
+                artist: 'https://twitter.com/intent/user?user_id=3129658207'
+            - hash: e65f8bca8ec2322363fc13924875b7eb
+              size: 1944x3505 PNG 4837.4KB
+              thumbnail: /thumbnail/e/6/5/f/e65f8bca8ec2322363fc13924875b7eb.jpg
+              title: ★2011★
+              artist: alica@サンこそS38
+              urls:
+                source: 'https://www.pixiv.net/artworks/15601359'
+                artist: 'https://www.pixiv.net/users/27915'
+            - hash: e7dfac627d1c1cd354c661aa3d2ddcd0
+              size: 1000x668 JPEG 455.1KB
+              thumbnail: /thumbnail/e/7/d/f/e7dfac627d1c1cd354c661aa3d2ddcd0.jpg
+              title: 2020.03.04
+              artist: web_giga
+              urls:
+                source: 'https://twitter.com/web_giga/status/1235138368956018689'
+                artist: 'https://twitter.com/intent/user?user_id=274318707'
+      title: PostSearchByImageAtAscii2dResponse
+      properties:
+        url:
+          type: string
+          minLength: 1
+          description: 取得結果ページのURL
+        result:
+          type: array
+          uniqueItems: true
+          minItems: 1
+          description: 一致した結果一覧
+          items:
+            type: object
+            properties:
+              hash:
+                type: string
+                description: 画像特有のハッシュ値
+                example: 379bf76fe1aeff3c4aff68404d717e59
+                minLength: 16
+                maxLength: 64
+              size:
+                type: string
+                maxLength: 20
+                minLength: 0
+                description: ファイルサイズ(HumanReadable)
+                example: 245.3KB
+              resolution:
+                type: string
+                maxLength: 50
+                minLength: 0
+                example: 640x480
+                description: 解像度
+              extension:
+                type: string
+                minLength: 0
+                maxLength: 10
+                example: JPEG
+                description: ファイル拡張子(大文字)
+              thumbnail:
+                type: string
+                minLength: 0
+                description: サムネイル画像URL
+                example: 'https://ascii2d.net/thumbnail/3/7/9/b/379bf76fe1aeff3c4aff68404d717e59.jpg'
+                format: uri-reference
+                maxLength: 200
+              title:
+                type: string
+                description: ツイートタイトルや日付等が入る
+                minLength: 0
+                maxLength: 100
+                example: リプラビチノちゃん
+              artist:
+                type: string
+                minLength: 0
+                description: 絵師の名前が入る
+                example: ぴちかー
+              urls:
+                type: object
+                description: URL一覧
+                properties:
+                  source:
+                    type: string
+                    minLength: 0
+                    description: ソースURL
+                    format: uri-reference
+                    maxLength: 200
+                  artist:
+                    type: string
+                    description: 絵師ページ直リンク(存在する場合)
+                    minLength: 0
+                    format: uri-reference
+                    maxLength: 100
+                required:
+                  - source
+                  - artist
+            required:
+              - hash
+              - size
+              - resolution
+              - extension
+              - thumbnail
+              - title
+              - artist
+      required:
+        - url
+        - result
+    PaginationStruct:
+      title: PaginationStruct
+      type: object
+      x-examples:
+        example:
+          title: 香風智乃
+          type: tag
+          count: 1
+          current: 1
+          pages: 1
+          perPage: 20
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: ページネーションタイトル(表示用)
+          example: 香風智乃
+        type:
+          type: string
+          description: ページネーション種別(表示用)
+          example: tag
+          enum:
+            - artist
+            - tag
+            - uploader
+            - notify-client
+            - notify-condition
+            - mute
+            - follow
+            - article
+            - mylist-list
+            - art
+            - upload-history
+          default: tag
+        count:
+          type: integer
+          example: 1
+          description: ヒット総数
+          minimum: 0
+          default: 0
+        current:
+          type: integer
+          description: 現在のページ
+          minimum: 1
+          example: 1
+          default: 1
+        pages:
+          type: integer
+          description: ページ数
+          minimum: 1
+          example: 1
+          default: 1
+        perPage:
+          type: integer
+          description: ページ毎の取得数
+          default: 20
+          example: 20
+          minimum: 20
+          enum:
+            - 20
+            - 40
+            - 60
+            - 80
+            - 100
+          maximum: 100
+          format: int32
+      required:
+        - title
+        - type
+        - count
+        - current
+        - pages
+        - perPage
+    LightAccountStruct:
+      title: LightAccountStruct
+      type: object
+      x-examples:
+        example:
+          accountID: 1
+          name: お窓
+      properties:
+        accountID:
+          type: integer
+          description: アカウントID
+          example: 1
+          minimum: 1
+        name:
+          type: string
+          description: アカウント名
+          example: お窓
+    LightArtistStruct:
+      title: LightArtistStruct
+      type: object
+      properties:
+        artistID:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 彩電
+      x-examples:
+        example:
+          artistID: 1
+          name: 彩電
+    LightArtStruct:
+      title: LightArtStruct
+      type: object
+      x-examples:
+        example:
+          artID: 1
+          title: 魔法少女は深淵になにをみるか？
+          caption: Ｃ８９の新刊表紙となっていますっ
+          datetime: '2015-12-27T07:29:00Z'
+          page: 1
+          likes: 0
+          views: 0
+          mylists: 0
+          mylisted: false
+          uploader:
+            accountID: 1
+            name: お窓
+          artists:
+            - artistID: 1
+              name: 彩電
+          originUrl: 'https://www.pixiv.net/artworks/54265978'
+          originService: Pixiv
+          nsfw: false
+          file:
+            ipfsHash:
+              thumb: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+              orig: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+          similarity: 0
+      description: 検索の応答モデル。配列で並んで返される。
+      properties:
+        artID:
+          type: integer
+          description: イラストID
+          minimum: 1
+          example: 1
+        title:
+          type: string
+          minLength: 1
+          description: イラスト(作品)名
+          example: 魔法少女は深淵になにをみるか？
+        caption:
+          type: string
+          description: |-
+            説明文
+            NOTE: 通常出典記載の説明文と同じ物が入る
+          example: Ｃ８９の新刊表紙となっていますっ
+          minLength: 1
+        datetime:
+          type: string
+          example: '2015-12-27T07:29:00Z'
+          description: '登録日(%Y-%m-%d %H:%M:%S)'
+          format: date-time
+        page:
+          type: integer
+          description: グループになっている場合のページ番号
+          default: 1
+          example: 1
+          minimum: 1
+          format: int32
+        likes:
+          type: integer
+          description: 累計いいね数
+          minimum: 0
+          example: 0
+          default: 0
+          format: int64
+        views:
+          type: integer
+          description: 累計閲覧数
+          minimum: 0
+          example: 0
+          default: 0
+          format: int64
+        mylists:
+          type: integer
+          description: マイリスト済みのユーザー数
+          minimum: 0
+          example: 0
+          default: 0
+          format: int64
+        mylisted:
+          type: boolean
+          description: リクエストしたユーザーがマイリストしているか
+          default: false
+        uploader:
+          $ref: '#/components/schemas/LightAccountStruct'
+        artists:
+          type: array
+          description: 絵師情報(複数可)
+          items:
+            $ref: '#/components/schemas/LightArtistStruct'
+        originUrl:
+          type: string
+          minLength: 1
+          description: 出典URL
+          example: 'https://www.pixiv.net/artworks/54265978'
+          format: uri-reference
+        originService:
+          type: string
+          minLength: 1
+          description: 出典のサービス名
+          example: Pixiv
+        nsfw:
+          type: boolean
+          description: アダルトコンテンツか否か
+          default: false
+        file:
+          type: object
+          properties:
+            ipfsHash:
+              type: object
+              description: IPFSのハッシュ情報
+              properties:
+                thumb:
+                  type: string
+                  description: サムネイルハッシュ
+                  example: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                  maxLength: 100
+                orig:
+                  type: string
+                  description: Raw画像ハッシュ
+                  example: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                  maxLength: 100
+        similarity:
+          type: number
+          description: 元画像との類似度(画像検索のみ)
+          minimum: 0
+          maximum: 1
+  parameters:
+    SearchQuerySort:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - l
+          - d
+        example: d
+        default: d
+      description: 'ソート方法 l:いいね数順 d:投稿日順'
+    SearchQueryOrder:
+      name: order
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - d
+          - a
+        default: d
+        example: d
+        minLength: 1
+        maxLength: 1
+      description: 'ソート方向 d:降順(大→小) a:昇順(小→大)'
+    SearchQueryPage:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+      description: 'ページ番号 (NOTE: 1ページ辺りの応答は20件)'
+    SearchQueryMylistAllow:
+      name: with_mylisted
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 1
+        enum:
+          - 1
+          - 0
+        example: 1
+        minimum: 0
+        maximum: 1
+      description: マイリスト追加済みかを取得する0/1 (デフォルト1)
+    SearchQueryMylistDeny:
+      name: with_mylisted
+      in: query
+      schema:
+        type: integer
+        enum:
+          - 0
+          - 1
+        example: 0
+        default: 0
+        minimum: 0
+        maximum: 1
+      description: マイリスト追加済みかを取得する0/1 (デフォルト0)
+    SearchQueryPerPage:
+      name: per_page
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 20
+        enum:
+          - 20
+          - 40
+          - 60
+          - 80
+          - 100
+        example: 20
+        minimum: 20
+        maximum: 100
+      description: 1ページ辺りの要素数
+    SearchQuerySortCatalog:
+      in: query
+      schema:
+        type: string
+        default: d
+        enum:
+          - c
+          - d
+          - l
+          - 'n'
+        example: d
+      description: 'ソート方法 c:ヒット数 d:最終更新 l:いいね数 n:名前'
+      name: sort
+  securitySchemes:
+    Authorization:
+      type: http
+      scheme: bearer
+tags:
+  - name: search
+security:
+  - Authorization: []

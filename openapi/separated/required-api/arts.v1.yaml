@@ -1,0 +1,1625 @@
+openapi: 3.0.0
+info:
+  title: UsagiBooru Arts API
+  version: '2.0'
+  contact:
+    name: Omado
+    url: 'https://twitter.com/shallow_omado'
+    email: dsgamer777@gmail.com
+  description: アート関連API
+  license:
+    name: GPLv3
+    url: 'https://www.gnu.org/licenses/gpl-3.0.ja.html'
+servers:
+  - url: 'http://127.0.0.1:8080'
+    description: Dev
+paths:
+  '/arts/{artID}':
+    parameters:
+      - schema:
+          type: integer
+        name: artID
+        in: path
+        required: true
+        description: 取得したいイラストのID
+    get:
+      summary: Get art info
+      tags:
+        - arts
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtStruct'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '451':
+          description: Unavailable For Legal Reasons
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      operationId: getArt
+      description: 指定したイラストを取得します
+    delete:
+      summary: Delete art
+      operationId: delete-arts-artID
+      responses:
+        '204':
+          description: No Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      description: |-
+        指定したイラストを削除します
+        削除してほしくないため非推奨とします
+        (このエンドポイントから削除したイラストは
+        参照が不可能になるだけであり一定日数サーバー上に残されます)
+      deprecated: true
+      tags:
+        - arts
+    patch:
+      summary: Edit art
+      operationId: put-arts-artID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtStruct'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      description: |-
+        指定したイラストの情報を編集します
+        パラメータで与えられたデータに応じて柔軟に
+        絵師名・タグ・キャラクター等を同時に書き換えます
+      tags:
+        - arts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtStruct'
+        description: ''
+  '/arts/{artID}/replace':
+    parameters:
+      - schema:
+          type: integer
+        name: artID
+        in: path
+        required: true
+        description: 置き換えしたい(画質が低い方の)イラストID
+    patch:
+      summary: Combine art info
+      operationId: replaceArt
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtStruct'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      tags:
+        - arts
+      description: |-
+        パスパラメータで指定された低画質なイラストに対して
+        クエリパラメータで指定されたより画質の良いイラストで統合(置き換え)処理を行います。
+        画質が低い方のいいね・タグ・出典・コメントが画質が高い方のイラストに対して統合されます。
+        置き換えられた画質が低い方のイラストは検索結果に表示されなくなりますが、IDを直接指定すれば閲覧できる状態で残ります。
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostReplaceArtRequest'
+  '/arts/{artID}/replace_simulate':
+    parameters:
+      - schema:
+          type: integer
+        name: artID
+        in: path
+        required: true
+        description: 置き換えしたい(画質が低い方の)イラストID
+    patch:
+      summary: Combine art info(simulate)
+      operationId: replaceArtSimulate
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostReplaceArtSimulateResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      tags:
+        - arts
+      description: |-
+        パスパラメータで指定された低画質なイラストに対して
+        クエリパラメータで指定されたより画質の良いイラストで統合(置き換え)処理の検証を行います。
+        画質が低い方のいいね・タグ・出典・コメントが画質が高い方のイラストに対して統合されます。
+        置き換えられた画質が低い方のイラストは検索結果に表示されなくなりますが、IDを直接指定すれば閲覧できる状態で残ります。
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostReplaceArtRequest'
+  '/arts/{artID}/tags':
+    get:
+      summary: Get art tags
+      tags:
+        - arts
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetArtTagsResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      operationId: getArtTags
+      description: 指定したイラストに付いているタグのみを一覧で取得します
+    parameters:
+      - schema:
+          type: integer
+        name: artID
+        in: path
+        required: true
+        description: 対象のイラストID
+    patch:
+      summary: Edit art tags
+      operationId: editArtTags
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetArtTagsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      description: |-
+        指定したイラストのタグ一覧に、与えられたIDのタグを設定します
+        削除も同様にこのエンドポイントを用います
+        (イラスト本体の編集時に付けられたタグ名から
+        自動的にタグIDを引き出し追加/削除を行う処理が追加されたため
+        こちらのエンドポイントを使用する必要はありません)
+      tags:
+        - arts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutArtTagsRequest'
+  '/arts/{artID}/likes/{likeType}':
+    parameters:
+      - schema:
+          type: integer
+        name: artID
+        in: path
+        required: true
+        description: いいねしたいイラストのID
+      - schema:
+          type: string
+          enum:
+            - yellow
+            - green
+            - red
+            - blue
+          default: yellow
+          example: yellow
+        name: likeType
+        in: path
+        required: true
+        description: いいね種別
+    get:
+      summary: Get art likes with specify type
+      operationId: getArtLikesWithType
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetArtLikesResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      description: 指定したイラストのいいねを取得します
+      tags:
+        - arts
+    patch:
+      summary: Plus art like (with using star)
+      operationId: addArtLike
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetArtLikesResponse'
+        '402':
+          description: Payment Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      tags:
+        - arts
+      description: |-
+        指定したイラストのいいね数を1増加させます
+        いいねする都度、likeTypeに指定されたスターを消費します
+        (ToyMoneyApiに問い合わせを行った上で増加処理を行うため若干時間がかかります)
+  '/arts/{artID}/likes':
+    parameters:
+      - schema:
+          type: integer
+        name: artID
+        in: path
+        required: true
+        description: いいねしたいイラストのID
+    get:
+      summary: Get art likes
+      operationId: getArtLikes
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtDetailedLikesStruct'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      description: 指定したイラストのいいねを取得します
+      tags:
+        - arts
+  '/arts/{artID}/views':
+    parameters:
+      - schema:
+          type: integer
+        name: artID
+        in: path
+        required: true
+        description: 対象のイラストID
+    get:
+      summary: Get art views
+      operationId: getArtViews
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetArtViewsResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      description: 指定したイラストの閲覧回数のみを取得します
+      tags:
+        - arts
+    patch:
+      summary: Plus art view
+      operationId: addArtView
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetArtViewsResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      tags:
+        - arts
+      description: |-
+        指定したイラストの閲覧回数を1増加させます
+        同一アカウントからのイラスト閲覧は1日1回のみカウントされます
+  '/arts/{artID}/comments':
+    parameters:
+      - schema:
+          type: integer
+        name: artID
+        in: path
+        required: true
+        description: 対象のイラストID
+    get:
+      summary: Get art comments
+      tags:
+        - arts
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetArtCommentsResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      operationId: getArtComments
+      description: 指定したイラストに付いているコメントのみを一覧で取得します
+    post:
+      summary: Add art comment
+      operationId: addArtComment
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentStruct'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      description: 指定したイラストにコメントを追加します
+      tags:
+        - arts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentEditStruct'
+  '/arts/{artID}/comments/{commentID}':
+    parameters:
+      - schema:
+          type: integer
+        name: artID
+        in: path
+        required: true
+        description: 対象のイラストID
+      - schema:
+          type: integer
+        name: commentID
+        in: path
+        required: true
+        description: 編集したいコメントのID
+    delete:
+      summary: Delete art comment
+      operationId: deleteArtComment
+      responses:
+        '204':
+          description: No Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      description: 指定したイラストに付けたコメントを削除します
+      tags:
+        - arts
+    get:
+      summary: Get art comment
+      operationId: getArtComment
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentStruct'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      description: 指定したイラストに付いている、指定されたIDのコメントを取得します
+      tags:
+        - arts
+    patch:
+      summary: Edit art comment
+      operationId: editArtComment
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentStruct'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      tags:
+        - arts
+      description: |-
+        指定したイラストに付けたコメントを編集します
+        (ActivityPubを使用している場合、編集後の内容が再投稿されます)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentEditStruct'
+  /arts:
+    post:
+      summary: Create art
+      operationId: addArt
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtStruct'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      tags:
+        - arts
+      description: パラメータで与えられたイラストを投稿します
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtStruct'
+components:
+  schemas:
+    ArtStruct:
+      description: イラスト編集リクエスト
+      type: object
+      title: ArtStruct
+      x-examples:
+        example:
+          artID: 1
+          title: 魔法少女は深淵になにをみるか？
+          caption: Ｃ８９の新刊表紙となっていますっ
+          datetime: '2015-12-27T07:29:00Z'
+          page: 1
+          likes: 0
+          views: 0
+          mylists: 0
+          mylisted: false
+          uploader:
+            accountID: 1
+            name: お窓
+          artists:
+            - artistID: 1
+              name: 彩電
+          contributors:
+            - accountID: 1
+              name: お窓
+          approvers:
+            - accountID: 1
+              name: お窓
+          originUrl: 'https://www.pixiv.net/artworks/54265978'
+          originService: Pixiv
+          nsfw: false
+          status: public
+          replaces: []
+          tags:
+            copyrights:
+              - tagID: 1
+                name: ご注文はうさぎですか?
+                nsfw: false
+            characters:
+              - tagID: 2
+                name: 香風智乃
+                nsfw: false
+            generals:
+              - tagID: 3
+                name: ロリ
+                nsfw: false
+            metas:
+              - tagID: 4
+                name: FHD
+                nsfw: false
+          detailedLikes:
+            yellow: 0
+            green: 0
+            red: 0
+            blue: 0
+          file:
+            original:
+              width: 1200
+              height: 1569
+              size: 1385794
+              extension: png
+              pHash: e5d2de31c62dd320
+              sha256: 0d68d378bec11f768f43925db81dd416c000de0d9ee2a8a1c2ec02aecb312e62
+            ipfsHash:
+              thumb: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+              small: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+              large: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+              orig: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+              info: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+      properties:
+        artID:
+          type: integer
+          description: イラストID
+          example: 1
+          minimum: 1
+        title:
+          type: string
+          minLength: 1
+          description: 'イラスト(作品)名 NOTE: 連番の場合は (2) (3)のような番号が入る'
+          example: 魔法少女は深淵になにをみるか？
+        caption:
+          type: string
+          minLength: 1
+          description: '説明文 NOTE: 通常出典に記載されていた内容そのままが入る'
+          example: Ｃ８９の新刊表紙となっていますっ
+        datetime:
+          type: string
+          description: '登録日時(%Y-%m-%d %H:%M:%S)'
+          example: '2015-12-27T07:29:00Z'
+          format: date-time
+        page:
+          type: integer
+          description: グループになっている場合のページ番号
+          minimum: 1
+          default: 1
+          example: 1
+          format: int32
+        likes:
+          type: integer
+          minimum: 0
+          description: 累計いいね数
+          default: 0
+          example: 0
+          format: int64
+        views:
+          type: integer
+          minimum: 0
+          description: 累計閲覧数
+          example: 0
+          default: 0
+          format: int64
+        mylists:
+          type: integer
+          minimum: 0
+          description: 累計マイリスト数
+          example: 0
+          default: 0
+          format: int64
+        mylisted:
+          type: boolean
+          default: false
+          description: マイリスト登録済みか否か
+        uploader:
+          $ref: '#/components/schemas/LightAccountStruct'
+        artists:
+          type: array
+          description: 絵師情報(複数可)
+          items:
+            $ref: '#/components/schemas/LightArtistStruct'
+        contributors:
+          type: array
+          description: 投稿者情報(複数可)
+          items:
+            $ref: '#/components/schemas/LightAccountStruct'
+        approvers:
+          type: array
+          description: 承認者情報(複数可)
+          items:
+            $ref: '#/components/schemas/LightAccountStruct'
+        originUrl:
+          type: string
+          minLength: 1
+          description: 出典URL
+          example: 'https://www.pixiv.net/artworks/54265978'
+          format: uri-reference
+        originService:
+          type: string
+          minLength: 1
+          description: 出典サービス名
+          example: Pixiv
+        nsfw:
+          type: boolean
+          description: アダルトコンテンツかどうか
+          default: false
+        status:
+          type: string
+          description: 公開/非公開等の表示状態
+          enum:
+            - public
+            - hidden
+            - deleted-admin
+            - deleted-legal
+            - deleted-uploader
+          example: public
+          default: hidden
+        replaces:
+          type: array
+          description: 置き換え履歴データ
+          items:
+            $ref: '#/components/schemas/ReplaceStruct'
+        tags:
+          type: object
+          description: タグ情報
+          properties:
+            copyrights:
+              type: array
+              description: 出典タグ
+              items:
+                $ref: '#/components/schemas/TagStruct'
+            characters:
+              type: array
+              description: キャラクタータグ
+              items:
+                $ref: '#/components/schemas/TagStruct'
+            generals:
+              type: array
+              description: 一般タグ
+              items:
+                $ref: '#/components/schemas/TagStruct'
+            metas:
+              type: array
+              description: システムタグ
+              items:
+                $ref: '#/components/schemas/TagStruct'
+        detailedLikes:
+          $ref: '#/components/schemas/ArtDetailedLikesStruct'
+        file:
+          type: object
+          properties:
+            original:
+              type: object
+              properties:
+                width:
+                  type: integer
+                  description: RAW画像の横方向のピクセル数
+                  example: 1200
+                  maximum: 100000
+                  minimum: 1
+                  format: int32
+                height:
+                  type: integer
+                  description: RAW画像の縦方向のピクセル数
+                  minimum: 1
+                  maximum: 100000
+                  example: 1569
+                  format: int32
+                size:
+                  type: integer
+                  description: ファイルサイズをbytesで入力
+                  maximum: 1099511627776
+                  format: int32
+                  minimum: 1
+                  default: 0
+                  example: 1385794
+                extension:
+                  type: string
+                  description: 拡張子(通常、jpgもしくはpng)
+                  enum:
+                    - jpg
+                    - jpeg
+                    - png
+                    - webp
+                    - gif
+                  example: png
+                  default: png
+                  minLength: 1
+                  maxLength: 10
+                pHash:
+                  type: string
+                  description: 画像ハッシュ
+                  example: e5d2de31c62dd320
+                  minLength: 1
+                  maxLength: 64
+                sha256:
+                  type: string
+                  description: ファイルハッシュ
+                  example: 0d68d378bec11f768f43925db81dd416c000de0d9ee2a8a1c2ec02aecb312e62
+                  minLength: 64
+                  maxLength: 64
+            ipfsHash:
+              type: object
+              properties:
+                thumb:
+                  type: string
+                  description: このイラストのサムネイル画像
+                  example: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                  maxLength: 100
+                small:
+                  type: string
+                  description: このイラストのSmall画像
+                  example: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                  maxLength: 100
+                large:
+                  type: string
+                  description: このイラストのLarge画像
+                  example: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                  maxLength: 100
+                orig:
+                  type: string
+                  description: このイラストのRAW画像
+                  example: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                  maxLength: 100
+                info:
+                  type: string
+                  description: このイラスト情報のJSONデータハッシュ
+                  example: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                  maxLength: 100
+    GeneralMessageResponse:
+      title: GeneralMessageResponse
+      type: object
+      properties:
+        message:
+          type: string
+          description: 応答メッセージ(何が間違っているかの詳細)
+          minLength: 1
+      required:
+        - message
+      x-examples:
+        not-found:
+          message: Specified content was not found.
+        no-permission:
+          message: You don't have enough permission to do it.
+        bad-request:
+          message: Your request body is wrong.
+        locked:
+          message: Specified content is referenced from other content.
+    PostReplaceArtRequest:
+      title: PostReplaceArtRequest
+      type: object
+      description: ''
+      properties:
+        artID:
+          type: integer
+          description: より画質が高いイラストのID
+          minimum: 1
+          example: 2
+      required:
+        - artID
+      x-examples:
+        example:
+          artID: 2
+    PostReplaceArtSimulateResponse:
+      description: ''
+      type: object
+      x-examples:
+        example:
+          to:
+            artID: 1
+            title: 魔法少女は深淵になにをみるか？
+            caption: Ｃ８９の新刊表紙となっていますっ
+            datetime: '2015-12-27T07:29:00Z'
+            page: 1
+            likes: 1204
+            views: 0
+            mylists: 0
+            mylisted: false
+            uploader:
+              accountID: 1
+              name: お窓
+            artists:
+              - artistID: 1
+                name: 彩電
+            contributors:
+              - accountID: 1
+                name: お窓
+            approvers:
+              - accountID: 1
+                name: お窓
+            originUrl: 'https://www.pixiv.net/artworks/54265978'
+            originService: Pixiv
+            nsfw: false
+            status: public
+            replaces:
+              - artID: 2
+                title: チノちゃん
+                caption: ''
+                date: '2021-03-05 01:27:22'
+                originService: Pixiv
+                originUrl: 'https://www.pixiv.net/artworks/88062684'
+                width: 750
+                height: 1200
+                filesize: 2M
+            tags:
+              copyrights:
+                - tagID: 1
+                  name: ご注文はうさぎですか?
+                  nsfw: false
+              characters:
+                - tagID: 2
+                  name: 香風智乃
+                  nsfw: false
+              generals:
+                - tagID: 3
+                  name: ロリ
+                  nsfw: false
+              metas:
+                - tagID: 4
+                  name: FHD
+                  nsfw: false
+            detailedLikes:
+              yellow: 1204
+              green: 0
+              red: 0
+              blue: 0
+            file:
+              original:
+                width: 1200
+                height: 1569
+                size: 1385794
+                extension: png
+                pHash: e5d2de31c62dd320
+                sha256: 0d68d378bec11f768f43925db81dd416c000de0d9ee2a8a1c2ec02aecb312e62
+              ipfsHash:
+                thumb: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                small: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                large: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                orig: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                info: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+          from:
+            artID: 1
+            title: 魔法少女は深淵になにをみるか？
+            caption: Ｃ８９の新刊表紙となっていますっ
+            datetime: '2015-12-27T07:29:00Z'
+            page: 1
+            likes: 0
+            views: 0
+            mylists: 0
+            mylisted: false
+            uploader:
+              accountID: 1
+              name: お窓
+            artists:
+              - artistID: 1
+                name: 彩電
+            contributors:
+              - accountID: 1
+                name: お窓
+            approvers:
+              - accountID: 1
+                name: お窓
+            originUrl: 'https://www.pixiv.net/artworks/54265978'
+            originService: Pixiv
+            nsfw: false
+            status: public
+            replaces: []
+            tags:
+              copyrights:
+                - tagID: 1
+                  name: ご注文はうさぎですか?
+                  nsfw: false
+              characters:
+                - tagID: 2
+                  name: 香風智乃
+                  nsfw: false
+              generals:
+                - tagID: 3
+                  name: ロリ
+                  nsfw: false
+              metas:
+                - tagID: 4
+                  name: FHD
+                  nsfw: false
+            detailedLikes:
+              yellow: 0
+              green: 0
+              red: 0
+              blue: 0
+            file:
+              original:
+                width: 1200
+                height: 1569
+                size: 1385794
+                extension: png
+                pHash: e5d2de31c62dd320
+                sha256: 0d68d378bec11f768f43925db81dd416c000de0d9ee2a8a1c2ec02aecb312e62
+              ipfsHash:
+                thumb: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                small: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                large: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                orig: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                info: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+      title: PostReplaceArtSimulateResponse
+      properties:
+        to:
+          $ref: '#/components/schemas/ArtStruct'
+        from:
+          $ref: '#/components/schemas/ArtStruct'
+      required:
+        - to
+        - from
+    GetArtTagsResponse:
+      title: GetArtTagsResponse
+      type: object
+      x-examples:
+        example:
+          tags:
+            copyrights:
+              - tagID: 1
+                name: ご注文はうさぎですか?
+                nsfw: false
+            characters:
+              - tagID: 2
+                name: 香風智乃
+                nsfw: false
+            generals:
+              - tagID: 3
+                name: ロリ
+                nsfw: false
+            metas:
+              - tagID: 4
+                name: FHD
+                nsfw: false
+      properties:
+        tags:
+          type: object
+          description: タグ情報
+          properties:
+            copyrights:
+              type: array
+              description: 出典タグ
+              items:
+                $ref: '#/components/schemas/TagStruct'
+            characters:
+              type: array
+              description: キャラクタータグ
+              items:
+                $ref: '#/components/schemas/TagStruct'
+            generals:
+              type: array
+              description: 一般タグ
+              items:
+                $ref: '#/components/schemas/TagStruct'
+            metas:
+              type: array
+              description: システムタグ
+              items:
+                $ref: '#/components/schemas/TagStruct'
+    PutArtTagsRequest:
+      title: PutArtTagsRequest
+      type: object
+      x-examples:
+        example-1:
+          tagID:
+            - 1
+            - 2
+            - 3
+      properties:
+        tagID:
+          type: array
+          description: 追加したいタグ一覧
+          minItems: 1
+          items:
+            type: integer
+      required:
+        - tagID
+    GetArtLikesResponse:
+      title: GetArtLikesResponse
+      type: object
+      x-examples:
+        example:
+          likes: 0
+      properties:
+        likes:
+          type: integer
+          description: 累計いいね数
+          default: 0
+          example: 0
+          minimum: 0
+    ArtDetailedLikesStruct:
+      title: ArtDetailedLikesStruct
+      type: object
+      x-examples:
+        example:
+          yellow: 0
+          green: 0
+          red: 0
+          blue: 0
+      properties:
+        yellow:
+          type: integer
+          example: 0
+          default: 0
+          minimum: 0
+        green:
+          type: integer
+          minimum: 0
+          default: 0
+          example: 0
+        red:
+          type: integer
+          minimum: 0
+          example: 0
+          default: 0
+        blue:
+          type: integer
+          minimum: 0
+          example: 0
+          default: 0
+      required:
+        - yellow
+        - green
+        - red
+        - blue
+    GetArtViewsResponse:
+      title: GetArtViewsResponse
+      type: object
+      x-examples:
+        example:
+          views: 0
+      properties:
+        views:
+          type: integer
+          minimum: 0
+          description: 累計閲覧数
+          example: 0
+          default: 0
+    GetArtCommentsResponse:
+      title: GetArtCommentsResponse
+      type: object
+      x-examples:
+        success-no-data:
+          comments: []
+        success:
+          comments:
+            - commentID: 1
+              created: '2021-03-13T11:29:24Z'
+              updated: '2021-03-13T11:29:24Z'
+              body: Hello world!
+              author:
+                accountID: 1
+                name: お窓
+      properties:
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentStruct'
+    CommentEditStruct:
+      title: CommentEditStruct
+      type: object
+      x-examples:
+        example:
+          body: Hello world!
+      properties:
+        body:
+          type: string
+          description: メッセージ本文(これ以外は編集できない)
+      required:
+        - body
+    CommentStruct:
+      description: コメント型
+      type: object
+      x-examples:
+        example:
+          commentID: 1
+          created: '2021-03-13T11:29:24Z'
+          updated: '2021-03-13T11:29:24Z'
+          body: Hello world!
+          author:
+            accountID: 1
+            name: お窓
+      title: CommentStruct
+      properties:
+        commentID:
+          type: integer
+          description: '"作品別" コメントID'
+          minimum: 1
+          format: int32
+        created:
+          type: string
+          description: 投稿時刻(datetime)
+          example: '2021-03-13T11:29:24Z'
+          format: date-time
+        updated:
+          type: string
+          description: 更新時刻(datetime)
+          example: '2021-03-13T11:29:24Z'
+          format: date-time
+        body:
+          type: string
+          description: コメント本文
+          maxLength: 500
+          minLength: 1
+          example: Hello world!
+        author:
+          $ref: '#/components/schemas/LightAccountStruct'
+    LightAccountStruct:
+      title: LightAccountStruct
+      type: object
+      x-examples:
+        example:
+          accountID: 1
+          name: お窓
+      properties:
+        accountID:
+          type: integer
+          description: アカウントID
+          example: 1
+          minimum: 1
+        name:
+          type: string
+          description: アカウント名
+          example: お窓
+    LightArtistStruct:
+      title: LightArtistStruct
+      type: object
+      properties:
+        artistID:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 彩電
+      x-examples:
+        example:
+          artistID: 1
+          name: 彩電
+    LightTagStruct:
+      title: LightTagStruct
+      type: object
+      x-examples:
+        example-copyright:
+          tagID: 1
+          type: copyright
+          name: ご注文はうさぎですか?
+        example-character:
+          tagID: 2
+          type: character
+          name: 香風智乃
+        example-general:
+          tagID: 3
+          type: general
+          name: ロリ
+        example-meta:
+          tagID: 4
+          type: meta
+          name: FHD
+      description: タグデータ簡易モデル
+      properties:
+        tagID:
+          type: integer
+          minimum: 1
+          description: サイト内通しタグ番号
+          example: 2
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+          description: タグの名称
+          example: 香風智乃
+    TagStruct:
+      title: TagStruct
+      type: object
+      x-examples:
+        example-copyright:
+          tagID: 1
+          type: copyright
+          name: ご注文はうさぎですか?
+          description: こころぴょんぴょんする漫画 from 芳文社
+          nsfw: false
+          issuer:
+            accountID: 1
+            name: お窓
+          parent: []
+          child: []
+          count: 0
+          lcount: 0
+        example-character:
+          tagID: 2
+          type: character
+          name: 香風智乃
+          description: ラビットハウスの一人娘。クールな性格だがココアのことは嫌いじゃない…!? コーヒーに詳しいしっかり者。
+          nsfw: false
+          issuer:
+            accountID: 1
+            name: お窓
+          parent: []
+          child: []
+          count: 0
+          lcount: 0
+        example-general:
+          tagID: 3
+          type: general
+          name: ロリ
+          description: 小さな女の子
+          nsfw: false
+          issuer:
+            accountID: 1
+            name: お窓
+          parent: []
+          child: []
+          count: 0
+          lcount: 0
+        example-meta:
+          tagID: 4
+          type: meta
+          name: FHD
+          description: フルHD並の解像度がある画像
+          nsfw: false
+          issuer:
+            accountID: 1
+            name: お窓
+          parent: []
+          child: []
+          count: 0
+          lcount: 0
+      description: タグデータモデル
+      properties:
+        tagID:
+          type: integer
+          minimum: 1
+          description: サイト内通しタグ番号
+        type:
+          type: string
+          description: タグ種別
+          enum:
+            - copyright
+            - character
+            - general
+            - meta
+          default: general
+          example: general
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+          description: タグの名称
+        description:
+          type: string
+          description: タグの説明文
+          maxLength: 280
+          minLength: 0
+        nsfw:
+          type: boolean
+          description: アダルトコンテンツが含まれるタグか
+          default: false
+        issuer:
+          $ref: '#/components/schemas/LightAccountStruct'
+        parent:
+          type: array
+          description: 親となるタグ
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/LightTagStruct'
+        child:
+          type: array
+          description: 子となるタグ
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/LightTagStruct'
+        count:
+          type: integer
+          description: タグに属する作品数
+          example: 0
+          minimum: 0
+          default: 0
+        lcount:
+          type: integer
+          description: タグに属するいいね数
+          minimum: 0
+          example: 0
+          default: 0
+    ReplaceStruct:
+      description: イラストを置き換えた情報のモデル(簡易型イラストモデル)
+      type: object
+      x-examples:
+        example:
+          artID: 1
+          title: チノちゃん
+          caption: ''
+          date: '2021-03-05 01:27:22'
+          originService: Pixiv
+          originUrl: 'https://www.pixiv.net/artworks/88062684'
+          width: 750
+          height: 1200
+          filesize: 2M
+      title: ReplaceStruct
+      properties:
+        artID:
+          type: integer
+          description: サイト内イラスト通し番号
+        title:
+          type: string
+          minLength: 1
+          description: 作品名
+        caption:
+          type: string
+          minLength: 1
+          description: 作品の説明文
+        date:
+          type: string
+          description: 投稿日付
+        originService:
+          type: string
+          minLength: 1
+          description: 出典サービス名
+        originUrl:
+          type: string
+          minLength: 1
+          description: 出典URL
+        width:
+          type: integer
+          description: RAW画像の横幅
+        height:
+          type: integer
+          description: RAW画像の縦幅
+        filesize:
+          type: string
+          minLength: 1
+          description: ファイルサイズに単位を付けた人間が読めるもの
+      required:
+        - artID
+        - title
+        - caption
+        - date
+        - originService
+        - originUrl
+        - width
+        - height
+        - filesize
+  parameters:
+    SearchQuerySort:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - l
+          - d
+        example: d
+        default: d
+      description: 'ソート方法 l:いいね数順 d:投稿日順'
+    SearchQueryOrder:
+      name: order
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - d
+          - a
+        default: d
+        example: d
+        minLength: 1
+        maxLength: 1
+      description: 'ソート方向 d:降順(大→小) a:昇順(小→大)'
+    SearchQueryPage:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+      description: 'ページ番号 (NOTE: 1ページ辺りの応答は20件)'
+    SearchQueryMylistAllow:
+      name: with_mylisted
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 1
+        enum:
+          - 1
+          - 0
+        example: 1
+        minimum: 0
+        maximum: 1
+      description: マイリスト追加済みかを取得する0/1 (デフォルト1)
+    SearchQueryMylistDeny:
+      name: with_mylisted
+      in: query
+      schema:
+        type: integer
+        enum:
+          - 0
+          - 1
+        example: 0
+        default: 0
+        minimum: 0
+        maximum: 1
+      description: マイリスト追加済みかを取得する0/1 (デフォルト0)
+    SearchQueryPerPage:
+      name: per_page
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 20
+        enum:
+          - 20
+          - 40
+          - 60
+          - 80
+          - 100
+        example: 20
+        minimum: 20
+        maximum: 100
+      description: 1ページ辺りの要素数
+    SearchQuerySortCatalog:
+      in: query
+      schema:
+        type: string
+        default: d
+        enum:
+          - c
+          - d
+          - l
+          - 'n'
+        example: d
+      description: 'ソート方法 c:ヒット数 d:最終更新 l:いいね数 n:名前'
+      name: sort
+  securitySchemes:
+    Authorization:
+      type: http
+      scheme: bearer
+tags:
+  - name: arts
+security:
+  - Authorization: []
