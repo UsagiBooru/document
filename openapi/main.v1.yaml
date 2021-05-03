@@ -13,6 +13,10 @@ info:
     name: GPLv3
     url: 'https://www.gnu.org/licenses/gpl-3.0.ja.html'
 servers:
+  - url: 'https://api.gochiusa.team'
+    description: Prod
+  - url: 'https://api-next.gochiusa.team'
+    description: Staging
   - url: 'http://127.0.0.1:8080'
     description: Dev
 paths:
@@ -267,6 +271,38 @@ paths:
                   password: this_is_only_for_test
         description: ユーザーIDとパスワードをパラメータに取ります
       security: []
+  /accounts/login/reset_password:
+    post:
+      summary: Reset password
+      tags:
+        - accounts
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+      operationId: reissuePassword
+      description: 指定されたメールアドレスにパスワード再発行メールを送信します
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostResetPasswordRequest'
+            examples:
+              admin:
+                value:
+                  mail: dsgamer777@gmail.com
+        description: メールアドレスをリクエストに取ります
+      security: []
+    parameters: []
   /catalog/artists:
     get:
       summary: Get artist list
@@ -4109,7 +4145,7 @@ components:
               thumb: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
               orig: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
           similarity: 0
-      description: 検索の応答モデル。配列で並んで返される。
+      description: イラスト情報の簡易構造体(読み取り専用)(検索結果等で利用)
       properties:
         artID:
           type: integer
@@ -4212,7 +4248,7 @@ components:
     NewsStruct:
       title: NewsStruct
       type: object
-      description: サイト内の新着情報モデル。
+      description: サイト内ニュース情報の構造体
       x-examples:
         example:
           newsID: 1
@@ -4258,7 +4294,7 @@ components:
     NavigationStruct:
       title: NavigationStruct
       type: object
-      description: サイト内上部ナビゲーションのエンドポイントで用いる応答モデル
+      description: サイト内上部ナビゲーション情報の構造体(読み取り専用)
       x-examples:
         example:
           name: 香風智乃
@@ -4358,7 +4394,7 @@ components:
             gatewayEnabled: false
             nodeEnabled: false
             pinEnabled: false
-      description: アカウントの取得/編集に使うリクエスト
+      description: アカウントの取得/編集に使う構造体
       properties:
         accountID:
           type: integer
@@ -4514,7 +4550,7 @@ components:
               description: マイリストを自動Pinningするか
               default: false
     ArtStruct:
-      description: イラスト編集リクエスト
+      description: イラストの作成/編集に使う構造体
       type: object
       title: ArtStruct
       x-examples:
@@ -4798,7 +4834,7 @@ components:
     PostLoginWithFormRequest:
       title: PostLoginWithFormRequest
       type: object
-      description: ''
+      description: ログインする際に利用される要求構造体
       x-examples:
         admin:
           id: omado
@@ -4877,7 +4913,7 @@ components:
           child: []
           count: 0
           lcount: 0
-      description: タグデータモデル
+      description: タグ情報の構造体
       properties:
         tagID:
           type: integer
@@ -4953,7 +4989,7 @@ components:
           tagID: 4
           type: meta
           name: FHD
-      description: タグデータ簡易モデル
+      description: タグ情報の簡易構造体(読み取り専用)
       properties:
         tagID:
           type: integer
@@ -4967,7 +5003,7 @@ components:
           description: タグの名称
           example: 香風智乃
     ReplaceStruct:
-      description: イラストを置き換えた情報のモデル(簡易型イラストモデル)
+      description: イラストを置き換えた情報構造体(簡易イラスト構造体)
       type: object
       x-examples:
         example:
@@ -5025,7 +5061,7 @@ components:
         - height
         - filesize
     UploadHistoryStruct:
-      description: アップロード履歴
+      description: 投稿履歴の応答構造体
       type: object
       title: UploadHistory
       x-examples:
@@ -5115,6 +5151,7 @@ components:
           minItems: 0
           items:
             $ref: '#/components/schemas/UploadHistoryStruct'
+      description: 投稿履歴情報一覧の応答構造体
     PostGenerateTokenResponse:
       title: PostGenerateTokenResponse
       type: object
@@ -5125,13 +5162,14 @@ components:
         apiKey:
           type: string
           minLength: 1
+      description: APIトークンを作成した結果の応答構造体
     PostLoginWithFormResponse:
       title: PostLoginWithFormResponse
       type: object
       x-examples:
         example:
           apiKey: DUMMY_API_KEY
-      description: ''
+      description: ログインに成功した際に利用される応答構造体
       properties:
         apiKey:
           type: string
@@ -5160,7 +5198,7 @@ components:
             - 'http://konebota.x0.com/PAGE/'
           count: 1
           lcount: 1204
-      description: ''
+      description: イラストの絵師情報構造体
       properties:
         artistID:
           type: integer
@@ -5232,7 +5270,7 @@ components:
     PostReplaceArtRequest:
       title: PostReplaceArtRequest
       type: object
-      description: ''
+      description: イラストを置き換える場合の要求構造体
       properties:
         artID:
           type: integer
@@ -5245,7 +5283,7 @@ components:
         example:
           artID: 2
     PostReplaceArtSimulateResponse:
-      description: ''
+      description: イラストの置き換えを検証した場合の応答構造体
       type: object
       x-examples:
         example:
@@ -5440,6 +5478,7 @@ components:
               description: システムタグ
               items:
                 $ref: '#/components/schemas/TagStruct'
+      description: イラストに設定されているタグ一覧の応答構造体
     PutArtTagsRequest:
       title: PutArtTagsRequest
       type: object
@@ -5458,6 +5497,7 @@ components:
             type: integer
       required:
         - tagID
+      description: イラストのタグ一覧をIDを用いて上書きする場合の要求構造体
     ArtDetailedLikesStruct:
       title: ArtDetailedLikesStruct
       type: object
@@ -5493,6 +5533,7 @@ components:
         - green
         - red
         - blue
+      description: イラストのいいね詳細情報構造体
     GetArtLikesResponse:
       title: GetArtLikesResponse
       type: object
@@ -5506,6 +5547,7 @@ components:
           default: 0
           example: 0
           minimum: 0
+      description: イラストに対するいいね数の応答構造体
     GetArtViewsResponse:
       title: GetArtViewsResponse
       type: object
@@ -5519,6 +5561,7 @@ components:
           description: 累計閲覧数
           example: 0
           default: 0
+      description: イラストの累計閲覧数の応答構造体
     GetArtCommentsResponse:
       title: GetArtCommentsResponse
       type: object
@@ -5539,8 +5582,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CommentStruct'
+      description: イラストに対するコメント一覧の応答構造体
     CommentStruct:
-      description: コメント型
+      description: コメント情報構造体(読み取り専用)
       type: object
       x-examples:
         example:
@@ -5577,7 +5621,7 @@ components:
         author:
           $ref: '#/components/schemas/LightAccountStruct'
     GetCatalogArtistResponse:
-      description: ''
+      description: 絵師一覧の応答構造体
       type: object
       x-examples:
         example:
@@ -5622,7 +5666,7 @@ components:
         - pagination
         - contents
     GetCatalogTagResponse:
-      description: ''
+      description: タグ一覧の応答構造体
       type: object
       x-examples:
         example:
@@ -5696,7 +5740,7 @@ components:
           items:
             $ref: '#/components/schemas/TagStruct'
     GetCatalogUploaderResponse:
-      description: ''
+      description: 投稿者一覧の応答構造体
       type: object
       x-examples:
         example:
@@ -5732,7 +5776,7 @@ components:
     UploaderStruct:
       title: UploaderStruct
       type: object
-      description: 投稿者ユーザー型
+      description: 投稿者情報の応答構造体
       x-examples:
         example:
           accountID: 1
@@ -5795,7 +5839,7 @@ components:
             - name: お窓
               id: 1
               count: 1
-      description: ''
+      description: ナビゲーション用情報一覧の汎用応答構造体
       properties:
         navigations:
           type: array
@@ -5817,14 +5861,14 @@ components:
               author:
                 accountID: 1
                 name: お窓
-      description: ''
+      description: ニュース情報一覧の応答構造体
       properties:
         news:
           type: array
           items:
             $ref: '#/components/schemas/NewsStruct'
     GetSearchGeneralResponse:
-      description: ''
+      description: なんらかの手段で検索した場合の汎用応答構造体
       type: object
       title: GetSearchGeneralResponse
       x-examples:
@@ -5868,7 +5912,7 @@ components:
           items:
             $ref: '#/components/schemas/LightArtStruct'
     GetMylistListResponse:
-      description: ''
+      description: マイリスト情報一覧の応答構造体
       type: object
       title: GetMylistListResponse
       x-examples:
@@ -5936,6 +5980,7 @@ components:
           description: 画像ファイル(binary)
       required:
         - file
+      description: 画像を用いて検索する場合の要求構造体
     PostSearchByImageResponse:
       title: PostSearchByImageResponse
       type: object
@@ -5979,8 +6024,9 @@ components:
       required:
         - hash
         - illusts
+      description: 画像を用いて検索した結果の応答構造体
     PostSearchByImageAtSauceNaoResponse:
-      description: ''
+      description: SauceNaoを用いて検索した場合の応答構造体
       type: object
       x-examples:
         example-1:
@@ -6208,6 +6254,7 @@ components:
       required:
         - tags
         - artists
+      description: ミュート情報一覧の応答構造体
     MylistStruct:
       title: MylistStruct
       type: object
@@ -6282,6 +6329,7 @@ components:
             $ref: '#/components/schemas/LightArtStruct'
         owner:
           $ref: '#/components/schemas/LightAccountStruct'
+      description: マイリスト情報の構造体
     PostMylistFindsRequest:
       title: PostMylistFindsRequest
       type: object
@@ -6297,6 +6345,7 @@ components:
             - 1
             - 2
             - 3
+      description: マイリストにイラストが含まれているかを検索する要求構造体
     PostMylistFindsResponse:
       title: PostMylistFindsResponse
       type: object
@@ -6312,6 +6361,7 @@ components:
           additionalProperties:
             type: string
             description: 指定されたイラストIDをキーとして、それぞれ存在するかのboolean
+      description: マイリストにイラストが含まれているかを検索した結果の応答構造体
     GetNotifyClientsResponse:
       title: GetNotifyClientsResponse
       type: object
@@ -6327,10 +6377,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/NotifyClientStruct'
+      description: 通知クライアント情報一覧の応答構造体
     NotifyClientStruct:
       title: NotifyClientStruct
       type: object
-      description: ''
+      description: 通知クライアント情報の構造体
       x-examples:
         example:
           notifyClientID: 1
@@ -6431,6 +6482,7 @@ components:
         - auth
         - name
         - level
+      description: WebPushのトークンを登録する際の要求構造体
     PostRegisterLineNotifyRequest:
       title: PostRegisterLineNotifyRequest
       type: object
@@ -6466,6 +6518,7 @@ components:
         - token
         - name
         - level
+      description: LineNotifyのトークンを登録する際の要求構造体
     GetNotifyConditionsResponse:
       title: GetNotifyConditionsResponse
       type: object
@@ -6492,6 +6545,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/NotifyConditionStruct'
+      description: 通知条件情報一覧の応答構造体
     NotifyConditionStruct:
       title: NotifyConditionStruct
       type: object
@@ -6549,6 +6603,7 @@ components:
           example: -1
           format: int32
           description: 対象の通知クライアント(ターゲットが全てなら-1)
+      description: 通知条件情報の構造体
     PostReportGeneralRequest:
       title: ReportGeneralRequest
       type: object
@@ -6586,7 +6641,7 @@ components:
     PostUploadRequest:
       title: PostUploadRequest
       type: object
-      description: ''
+      description: ファイルをアップロードする際の要求構造体
       properties:
         file:
           type: string
@@ -6604,8 +6659,9 @@ components:
         url:
           description: 投稿したファイルのURL(有効期限は1時間とする)
           type: string
+      description: ファイルをアップロードした際の応答構造体
     PostSearchByImageAtAscii2dResponse:
-      description: ''
+      description: Ascii2dを用いて検索した場合の応答構造体
       type: object
       x-examples:
         success:
@@ -6779,6 +6835,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TagStruct'
+      description: タグ一覧からの検索結果の応答構造体
     GetTimelineFollowingResponse:
       title: GetTimelineFollowingResponse
       type: object
@@ -6801,6 +6858,7 @@ components:
           follows:
             - artistID: 1
               name: 彩電
+      description: タイムラインのフォロー一覧の応答構造体
     WikiArticleStruct:
       title: WikiArticleStruct
       type: object
@@ -6862,8 +6920,11 @@ components:
           example: 1
         author:
           $ref: '#/components/schemas/LightAccountStruct'
+      description: Wikiの記事の応答構造体
     ActivityPubActorStruct:
-      description: 'https://argrath.github.io/activitypub/#actor-objects'
+      description: |-
+        ActivityPubのアクター(ユーザー)構造体(仮)
+        https://argrath.github.io/activitypub/#actor-objects
       type: object
       x-examples:
         example-1:
@@ -6941,7 +7002,7 @@ components:
         - summary
         - icon
     GetActivityPubGeneralResponse:
-      description: ''
+      description: ActivityPubのBoxを取得した際等に返される汎用応答構造体
       type: object
       properties:
         '@context':
@@ -6989,7 +7050,7 @@ components:
               name: Another Simple Note
       title: GetActivityPubGeneralResponse
     PostActivityPubGeneralRequest:
-      description: ''
+      description: ActivityPubのBox宛へPOSTする場合の汎用要求構造体
       type: object
       properties:
         '@context':
@@ -7062,6 +7123,7 @@ components:
           message: Your request body is wrong.
         locked:
           message: Specified content is referenced from other content.
+      description: 共通の応答構造体(404/401/400等を返す際に使用)
     CommentEditStruct:
       title: CommentEditStruct
       type: object
@@ -7074,6 +7136,7 @@ components:
           description: メッセージ本文(これ以外は編集できない)
       required:
         - body
+      description: コメントの編集に使う構造体
     InviteStruct:
       title: InviteStruct
       type: object
@@ -7103,6 +7166,7 @@ components:
             accountID: 1
             name: お窓
           count: 1
+      description: 招待コードの構造体
     PaginationStruct:
       title: PaginationStruct
       type: object
@@ -7176,6 +7240,7 @@ components:
         - current
         - pages
         - perPage
+      description: ページネーション情報の構造体
     MuteStruct:
       title: MuteStruct
       type: object
@@ -7208,6 +7273,7 @@ components:
           description: 対象のタグ/絵師ID
           minimum: 1
           example: 1
+      description: ミュート情報の構造体
     PostMachineLearningGeneralRequest:
       title: PostMachineLearningGeneralRequest
       type: object
@@ -7219,6 +7285,7 @@ components:
           description: Binary型の画像
       required:
         - image
+      description: 機械学習の処理を行うエンドポイントの汎用要求構造体
     PostPredictNsfwResponse:
       title: PostPredictNsfwResponse
       type: object
@@ -7238,6 +7305,7 @@ components:
         example:
           nsfw: false
           accuracy: 0.8889
+      description: 画像がNSFWか検証した結果の応答構造体
     PostPredictTagsResponse:
       title: PostPredictTagsResponse
       type: object
@@ -7271,6 +7339,7 @@ components:
           tags:
             - name: kafuu_chino
               accuracy: 0.8889
+      description: 画像からタグを推定した結果の応答構造体
     PostMachineLearningGeneralResponse:
       title: PostMachineLearningGeneralResponse
       type: object
@@ -7284,6 +7353,7 @@ components:
       x-examples:
         example:
           url: 'https://api.example.com/ml/polling/1'
+      description: 機械学習の処理を行うエンドポイントの汎用応答構造体
     GetMachineLearningGeneralResponse:
       title: GetMachineLearningGeneralResponse
       type: object
@@ -7299,6 +7369,7 @@ components:
       x-examples:
         example:
           url: 'https://api.example.com/ml/result/12345.png'
+      description: 機械学習の処理結果が返されるエンドポイントの汎用応答構造体
     GetPollingFinishResponse:
       title: GetPollingFinishResponse
       type: object
@@ -7321,6 +7392,7 @@ components:
         example:
           url: 'https://api.example.com/ml/predict/tags/result/1'
           id: '1'
+      description: 機械学習の処理が完了した場合に返される応答構造体
     GetWikiArticlesResponse:
       title: GetWikiArticlesResponse
       type: object
@@ -7351,8 +7423,9 @@ components:
               author:
                 accountID: 1
                 name: お窓
+      description: Wikiの記事情報一覧の応答構造体
     GetWebAuthnRequestResponse:
-      description: ''
+      description: WebAuthnを用いた認証を行う場合にはじめに取得される応答構造体
       type: object
       x-examples:
         example-1:
@@ -7445,7 +7518,7 @@ components:
             userVerification:
               type: string
               minLength: 1
-      title: ''
+      title: GetWebAuthnRequestResponse
     LightAccountStruct:
       title: LightAccountStruct
       type: object
@@ -7463,6 +7536,7 @@ components:
           type: string
           description: アカウント名
           example: お窓
+      description: アカウント情報の簡易構造体(読み取り専用)
     LightArtistStruct:
       title: LightArtistStruct
       type: object
@@ -7477,6 +7551,18 @@ components:
         example:
           artistID: 1
           name: 彩電
+      description: 絵師情報の簡易構造体(読み取り専用)
+    PostResetPasswordRequest:
+      title: PostResetPasswordRequest
+      type: object
+      description: パスワードをリセットする際に使う要求構造体
+      x-examples:
+        admin:
+          mail: dsgamer777@gmail.com
+      properties:
+        mail:
+          type: string
+          description: メールアドレス(のみ)
   securitySchemes:
     Authorization:
       type: http
