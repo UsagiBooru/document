@@ -21,3 +21,9 @@ paths: {}
 components:
   schemas: {}
   parameters: {}
+  securitySchemes:
+    Authorization:
+      type: http
+      scheme: bearer
+security:
+  - Authorization: []

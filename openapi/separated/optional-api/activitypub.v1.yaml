@@ -1,511 +1,516 @@
-openapi: 3.0.0
+components:
+  parameters:
+    SearchQueryMylistAllow:
+      description: マイリスト追加済みかを取得する0/1 (デフォルト1)
+      in: query
+      name: with_mylisted
+      required: false
+      schema:
+        default: 1
+        enum:
+        - 1
+        - 0
+        example: 1
+        format: int32
+        maximum: 1
+        minimum: 0
+        type: integer
+    SearchQueryMylistDeny:
+      description: マイリスト追加済みかを取得する0/1 (デフォルト0)
+      in: query
+      name: with_mylisted
+      schema:
+        default: 0
+        enum:
+        - 0
+        - 1
+        example: 0
+        maximum: 1
+        minimum: 0
+        type: integer
+    SearchQueryOrder:
+      description: ソート方向 d:降順(大→小) a:昇順(小→大)
+      in: query
+      name: order
+      required: false
+      schema:
+        default: d
+        enum:
+        - d
+        - a
+        example: d
+        maxLength: 1
+        minLength: 1
+        type: string
+    SearchQueryPage:
+      description: 'ページ番号 (NOTE: 1ページ辺りの応答は20件)'
+      in: query
+      name: page
+      required: false
+      schema:
+        minimum: 1
+        type: integer
+    SearchQueryPerPage:
+      description: 1ページ辺りの要素数
+      in: query
+      name: per_page
+      required: false
+      schema:
+        default: 20
+        enum:
+        - 20
+        - 40
+        - 60
+        - 80
+        - 100
+        example: 20
+        maximum: 100
+        minimum: 20
+        type: integer
+    SearchQuerySort:
+      description: ソート方法 l:いいね数順 d:投稿日順
+      in: query
+      name: sort
+      required: false
+      schema:
+        default: d
+        enum:
+        - l
+        - d
+        example: d
+        type: string
+    SearchQuerySortCatalog:
+      description: ソート方法 c:ヒット数 d:最終更新 l:いいね数 n:名前
+      in: query
+      name: sort
+      schema:
+        default: d
+        enum:
+        - c
+        - d
+        - l
+        - n
+        example: d
+        type: string
+  schemas:
+    ActivityPubActorStruct:
+      description: 'ActivityPubのアクター(ユーザー)構造体(仮)
+
+        https://argrath.github.io/activitypub/#actor-objects'
+      properties:
+        '@context':
+          items:
+            properties:
+              '1':
+                properties:
+                  '@language':
+                    minLength: 1
+                    type: string
+                required:
+                - '@language'
+                type: object
+            type: object
+          type: array
+        followers:
+          minLength: 1
+          type: string
+        following:
+          minLength: 1
+          type: string
+        icon:
+          items:
+            type: string
+          type: array
+        id:
+          minLength: 1
+          type: string
+        inbox:
+          minLength: 1
+          type: string
+        liked:
+          minLength: 1
+          type: string
+        name:
+          minLength: 1
+          type: string
+        outbox:
+          minLength: 1
+          type: string
+        preferredUsername:
+          minLength: 1
+          type: string
+        summary:
+          minLength: 1
+          type: string
+        type:
+          minLength: 1
+          type: string
+      required:
+      - type
+      - id
+      - inbox
+      - outbox
+      - preferredUsername
+      - name
+      - summary
+      - icon
+      title: ActivityPubActorStruct
+      type: object
+      x-examples:
+        example-1:
+          '@context':
+          - https://www.w3.org/ns/activitystreams
+          - '@language': ja
+          followers: https://kenzoishii.example.com/followers.json
+          following: https://kenzoishii.example.com/following.json
+          icon:
+          - https://kenzoishii.example.com/image/165987aklre4
+          id: https://kenzoishii.example.com/
+          inbox: https://kenzoishii.example.com/inbox.json
+          liked: https://kenzoishii.example.com/liked.json
+          name: 石井健蔵
+          outbox: https://kenzoishii.example.com/feed.json
+          preferredUsername: kenzoishii
+          summary: この方はただの例です
+          type: Person
+    GeneralMessageResponse:
+      description: 共通の応答構造体(404/401/400等を返す際に使用)
+      properties:
+        message:
+          description: 応答メッセージ(何が間違っているかの詳細)
+          minLength: 1
+          type: string
+      required:
+      - message
+      title: GeneralMessageResponse
+      type: object
+      x-examples:
+        bad-request:
+          message: Your request body is wrong.
+        locked:
+          message: Specified content is referenced from other content.
+        no-permission:
+          message: You don't have enough permission to do it.
+        not-found:
+          message: Specified content was not found.
+    GetActivityPubGeneralResponse:
+      description: ActivityPubのBoxを取得した際等に返される汎用応答構造体
+      properties:
+        '@context':
+          minLength: 1
+          type: string
+        orderedItems:
+          items:
+            properties:
+              name:
+                minLength: 1
+                type: string
+              type:
+                minLength: 1
+                type: string
+            required:
+            - type
+            - name
+          minItems: 1
+          type: array
+          uniqueItems: true
+        summary:
+          minLength: 1
+          type: string
+        totalItems:
+          type: number
+        type:
+          minLength: 1
+          type: string
+      required:
+      - '@context'
+      - summary
+      - type
+      - totalItems
+      - orderedItems
+      title: GetActivityPubGeneralResponse
+      type: object
+      x-examples:
+        example:
+          '@context': https://www.w3.org/ns/activitystreams
+          orderedItems:
+          - name: A Simple Note
+            type: Note
+          - name: Another Simple Note
+            type: Note
+          summary: Sally's notes
+          totalItems: 2
+          type: OrderedCollection
+    PostActivityPubGeneralRequest:
+      description: ActivityPubのBox宛へPOSTする場合の汎用要求構造体
+      properties:
+        '@context':
+          minLength: 1
+          type: string
+        actor:
+          properties:
+            name:
+              minLength: 1
+              type: string
+            type:
+              minLength: 1
+              type: string
+          required:
+          - type
+          - name
+          type: object
+        object:
+          properties:
+            name:
+              minLength: 1
+              type: string
+            type:
+              minLength: 1
+              type: string
+          required:
+          - type
+          - name
+          type: object
+        summary:
+          minLength: 1
+          type: string
+        type:
+          minLength: 1
+          type: string
+      required:
+      - '@context'
+      - type
+      - summary
+      - actor
+      - object
+      title: PostActivityPubGeneralRequest
+      type: object
+      x-examples:
+        example-1:
+          '@context': https://www.w3.org/ns/activitystreams
+          actor:
+            name: Sally
+            type: Person
+          object:
+            name: A Note
+            type: Note
+          summary: Sally did something to a note
+          type: Activity
+  securitySchemes:
+    Authorization:
+      scheme: bearer
+      type: http
 info:
-  title: UsagiBooru ActivityPub API
-  version: '2.0'
   contact:
-    name: Omado
-    url: 'https://twitter.com/shallow_omado'
     email: dsgamer777@gmail.com
-  description: |-
-    ActivityPub関連API
-    (Optional)
+    name: Omado
+    url: https://twitter.com/shallow_omado
+  description: Activitypub related api (optional)
   license:
-    name: GPLv3
-    url: 'https://www.gnu.org/licenses/gpl-3.0.ja.html'
-servers:
-  - url: 'http://127.0.0.1:8080'
-    description: Dev
+    name: AGPLv3
+    url: https://www.gnu.org/licenses/agpl-3.0.ja.html
+  title: UsagiBooru Activitypub API
+  version: '2.0'
+openapi: 3.0.0
 paths:
-  '/activitypub/uploader/{accountID}/outbox':
+  /activitypub/artist/{artistID}:
     get:
-      summary: Provide federation user message
-      tags:
-        - activitypub
+      description: 'ActivityPubのユーザー情報(絵師)を返す
+
+        (実際使うときは https://example.com/artist/{displayID} からリダイレクト?)'
+      operationId: getActivityPubArtistActor
       responses:
         '200':
-          description: OK
           content:
             application/activity+json:
               schema:
-                $ref: '#/components/schemas/GetActivityPubGeneralResponse'
+                $ref: '#/components/schemas/ActivityPubActorStruct'
+          description: OK
         '404':
-          description: Not Found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralMessageResponse'
-      operationId: getActivityPubUploaderOutbox
-      description: 他のサーバーがこのユーザーのメッセージを受け取るときにGETされる
+          description: Not Found
+      summary: Get activitypub artist actor
+      tags:
+      - activitypub
     parameters:
-      - schema:
-          type: integer
-        name: accountID
-        in: path
-        required: true
-        description: 対象のアカウントID
-  '/activitypub/artist/{artistID}/outbox':
+    - description: 対象の絵師ID
+      in: path
+      name: artistID
+      required: true
+      schema:
+        type: integer
+  /activitypub/artist/{artistID}/outbox:
     get:
+      description: 他のサーバーがこのユーザーのメッセージを受け取るときにGETされる
+      operationId: getActivityPubArtistOutbox
+      responses:
+        '200':
+          content:
+            application/activity+json:
+              schema:
+                $ref: '#/components/schemas/GetActivityPubGeneralResponse'
+          description: OK
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
       summary: Provide federation artist message
       tags:
-        - activitypub
+      - activitypub
+    parameters:
+    - description: 対象の絵師ID
+      in: path
+      name: artistID
+      required: true
+      schema:
+        type: integer
+  /activitypub/server:
+    get:
+      description: ActivityPubのユーザー情報(サーバー)を返す
+      operationId: getActivityPubServerActor
       responses:
         '200':
+          content:
+            application/activity+json:
+              schema:
+                $ref: '#/components/schemas/ActivityPubActorStruct'
           description: OK
+      summary: Get activitypub server base
+      tags:
+      - activitypub
+  /activitypub/server/inbox:
+    get:
+      description: このサーバーが自分自身に来ている通知などを取得する際にGETされる
+      operationId: getActivityPubServerInbox
+      responses:
+        '200':
           content:
             application/activity+json:
               schema:
                 $ref: '#/components/schemas/GetActivityPubGeneralResponse'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      operationId: getActivityPubArtistOutbox
-      description: 他のサーバーがこのユーザーのメッセージを受け取るときにGETされる
-    parameters:
-      - schema:
-          type: integer
-        name: artistID
-        in: path
-        required: true
-        description: 対象の絵師ID
-  /activitypub/server/inbox:
-    post:
-      summary: Recieve federation to server message
-      operationId: postActivityPubServerInbox
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      description: 他のサーバーがこのサーバーに向けてメッセージを送るときにPOSTされる
+          description: OK
+      summary: Check federation server message
       tags:
-        - activitypub
+      - activitypub
+    post:
+      description: 他のサーバーがこのサーバーに向けてメッセージを送るときにPOSTされる
+      operationId: postActivityPubServerInbox
       requestBody:
         content:
           application/activity+json:
             schema:
               $ref: '#/components/schemas/PostActivityPubGeneralRequest'
-    get:
-      summary: Check federation server message
-      operationId: getActivityPubServerInbox
-      responses:
-        '200':
-          description: OK
-          content:
-            application/activity+json:
-              schema:
-                $ref: '#/components/schemas/GetActivityPubGeneralResponse'
-      description: このサーバーが自分自身に来ている通知などを取得する際にGETされる
-      tags:
-        - activitypub
-  /activitypub/server/outbox:
-    get:
-      summary: Provide federation server message
-      tags:
-        - activitypub
-      responses:
-        '200':
-          description: OK
-          content:
-            application/activity+json:
-              schema:
-                $ref: '#/components/schemas/GetActivityPubGeneralResponse'
-      operationId: getActivityPubServerOutbox
-      description: 他のサーバーがこのサーバーのメッセージを受け取るときにGETされる
-    post:
-      summary: Send federation server message
-      operationId: postActivityPubServerOutbox
       responses:
         '201':
-          description: Created
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralMessageResponse'
-      description: このサーバーが他のサーバーに向けてメッセージを送るときにPOSTされる
+          description: Created
+      summary: Recieve federation to server message
       tags:
-        - activitypub
+      - activitypub
+  /activitypub/server/outbox:
+    get:
+      description: 他のサーバーがこのサーバーのメッセージを受け取るときにGETされる
+      operationId: getActivityPubServerOutbox
+      responses:
+        '200':
+          content:
+            application/activity+json:
+              schema:
+                $ref: '#/components/schemas/GetActivityPubGeneralResponse'
+          description: OK
+      summary: Provide federation server message
+      tags:
+      - activitypub
+    post:
+      description: このサーバーが他のサーバーに向けてメッセージを送るときにPOSTされる
+      operationId: postActivityPubServerOutbox
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/PostActivityPubGeneralRequest'
-  '/activitypub/artist/{artistID}':
-    parameters:
-      - schema:
-          type: integer
-        name: artistID
-        in: path
-        required: true
-        description: 対象の絵師ID
-    get:
-      summary: Get activitypub artist actor
-      tags:
-        - activitypub
       responses:
-        '200':
-          description: OK
-          content:
-            application/activity+json:
-              schema:
-                $ref: '#/components/schemas/ActivityPubActorStruct'
-        '404':
-          description: Not Found
+        '201':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralMessageResponse'
-      operationId: getActivityPubArtistActor
-      description: |-
-        ActivityPubのユーザー情報(絵師)を返す
-        (実際使うときは https://example.com/artist/{displayID} からリダイレクト?)
-  '/activitypub/uploader/{accountID}':
-    parameters:
-      - schema:
-          type: string
-        name: accountID
-        in: path
-        required: true
-        description: 対象のアカウントID
+          description: Created
+      summary: Send federation server message
+      tags:
+      - activitypub
+  /activitypub/uploader/{accountID}:
     get:
+      description: 'ActivityPubのユーザー情報(投稿者)を返す
+
+        (実際使うときは https://example.com/uploader/{displayID} からリダイレクト?)'
+      operationId: getActivityPubUploaderActor
+      responses:
+        '200':
+          content:
+            application/activity+json:
+              schema:
+                $ref: '#/components/schemas/ActivityPubActorStruct'
+          description: OK
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
       summary: Get activitypub uploader actor
       tags:
-        - activitypub
+      - activitypub
+    parameters:
+    - description: 対象のアカウントID
+      in: path
+      name: accountID
+      required: true
+      schema:
+        type: string
+  /activitypub/uploader/{accountID}/outbox:
+    get:
+      description: 他のサーバーがこのユーザーのメッセージを受け取るときにGETされる
+      operationId: getActivityPubUploaderOutbox
       responses:
         '200':
-          description: OK
           content:
             application/activity+json:
               schema:
-                $ref: '#/components/schemas/ActivityPubActorStruct'
+                $ref: '#/components/schemas/GetActivityPubGeneralResponse'
+          description: OK
         '404':
-          description: Not Found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralMessageResponse'
-      operationId: getActivityPubUploaderActor
-      description: |-
-        ActivityPubのユーザー情報(投稿者)を返す
-        (実際使うときは https://example.com/uploader/{displayID} からリダイレクト?)
-  /activitypub/server:
-    get:
-      summary: Get activitypub server base
+          description: Not Found
+      summary: Provide federation user message
       tags:
-        - activitypub
-      responses:
-        '200':
-          description: OK
-          content:
-            application/activity+json:
-              schema:
-                $ref: '#/components/schemas/ActivityPubActorStruct'
-      operationId: getActivityPubServerActor
-      description: ActivityPubのユーザー情報(サーバー)を返す
-components:
-  schemas:
-    GetActivityPubGeneralResponse:
-      description: ''
-      type: object
-      properties:
-        '@context':
-          type: string
-          minLength: 1
-        summary:
-          type: string
-          minLength: 1
-        type:
-          type: string
-          minLength: 1
-        totalItems:
-          type: number
-        orderedItems:
-          type: array
-          uniqueItems: true
-          minItems: 1
-          items:
-            required:
-              - type
-              - name
-            properties:
-              type:
-                type: string
-                minLength: 1
-              name:
-                type: string
-                minLength: 1
-      required:
-        - '@context'
-        - summary
-        - type
-        - totalItems
-        - orderedItems
-      x-examples:
-        example:
-          '@context': 'https://www.w3.org/ns/activitystreams'
-          summary: Sally's notes
-          type: OrderedCollection
-          totalItems: 2
-          orderedItems:
-            - type: Note
-              name: A Simple Note
-            - type: Note
-              name: Another Simple Note
-      title: GetActivityPubGeneralResponse
-    GeneralMessageResponse:
-      title: GeneralMessageResponse
-      type: object
-      properties:
-        message:
-          type: string
-          description: 応答メッセージ(何が間違っているかの詳細)
-          minLength: 1
-      required:
-        - message
-      x-examples:
-        not-found:
-          message: Specified content was not found.
-        no-permission:
-          message: You don't have enough permission to do it.
-        bad-request:
-          message: Your request body is wrong.
-        locked:
-          message: Specified content is referenced from other content.
-    PostActivityPubGeneralRequest:
-      description: ''
-      type: object
-      properties:
-        '@context':
-          type: string
-          minLength: 1
-        type:
-          type: string
-          minLength: 1
-        summary:
-          type: string
-          minLength: 1
-        actor:
-          type: object
-          properties:
-            type:
-              type: string
-              minLength: 1
-            name:
-              type: string
-              minLength: 1
-          required:
-            - type
-            - name
-        object:
-          type: object
-          properties:
-            type:
-              type: string
-              minLength: 1
-            name:
-              type: string
-              minLength: 1
-          required:
-            - type
-            - name
-      required:
-        - '@context'
-        - type
-        - summary
-        - actor
-        - object
-      x-examples:
-        example-1:
-          '@context': 'https://www.w3.org/ns/activitystreams'
-          type: Activity
-          summary: Sally did something to a note
-          actor:
-            type: Person
-            name: Sally
-          object:
-            type: Note
-            name: A Note
-      title: PostActivityPubGeneralRequest
-    ActivityPubActorStruct:
-      description: 'https://argrath.github.io/activitypub/#actor-objects'
-      type: object
-      x-examples:
-        example-1:
-          '@context':
-            - 'https://www.w3.org/ns/activitystreams'
-            - '@language': ja
-          type: Person
-          id: 'https://kenzoishii.example.com/'
-          following: 'https://kenzoishii.example.com/following.json'
-          followers: 'https://kenzoishii.example.com/followers.json'
-          liked: 'https://kenzoishii.example.com/liked.json'
-          inbox: 'https://kenzoishii.example.com/inbox.json'
-          outbox: 'https://kenzoishii.example.com/feed.json'
-          preferredUsername: kenzoishii
-          name: 石井健蔵
-          summary: この方はただの例です
-          icon:
-            - 'https://kenzoishii.example.com/image/165987aklre4'
-      title: ActivityPubActorStruct
-      properties:
-        '@context':
-          type: array
-          items:
-            type: object
-            properties:
-              '1':
-                type: object
-                properties:
-                  '@language':
-                    type: string
-                    minLength: 1
-                required:
-                  - '@language'
-        type:
-          type: string
-          minLength: 1
-        id:
-          type: string
-          minLength: 1
-        following:
-          type: string
-          minLength: 1
-        followers:
-          type: string
-          minLength: 1
-        liked:
-          type: string
-          minLength: 1
-        inbox:
-          type: string
-          minLength: 1
-        outbox:
-          type: string
-          minLength: 1
-        preferredUsername:
-          type: string
-          minLength: 1
-        name:
-          type: string
-          minLength: 1
-        summary:
-          type: string
-          minLength: 1
-        icon:
-          type: array
-          items:
-            type: string
-      required:
-        - type
-        - id
-        - inbox
-        - outbox
-        - preferredUsername
-        - name
-        - summary
-        - icon
-  parameters:
-    SearchQuerySort:
-      name: sort
-      in: query
-      required: false
-      schema:
-        type: string
-        enum:
-          - l
-          - d
-        example: d
-        default: d
-      description: 'ソート方法 l:いいね数順 d:投稿日順'
-    SearchQueryOrder:
-      name: order
-      in: query
-      required: false
-      schema:
-        type: string
-        enum:
-          - d
-          - a
-        default: d
-        example: d
-        minLength: 1
-        maxLength: 1
-      description: 'ソート方向 d:降順(大→小) a:昇順(小→大)'
-    SearchQueryPage:
-      name: page
-      in: query
-      required: false
+      - activitypub
+    parameters:
+    - description: 対象のアカウントID
+      in: path
+      name: accountID
+      required: true
       schema:
         type: integer
-        minimum: 1
-      description: 'ページ番号 (NOTE: 1ページ辺りの応答は20件)'
-    SearchQueryMylistAllow:
-      name: with_mylisted
-      in: query
-      required: false
-      schema:
-        type: integer
-        format: int32
-        default: 1
-        enum:
-          - 1
-          - 0
-        example: 1
-        minimum: 0
-        maximum: 1
-      description: マイリスト追加済みかを取得する0/1 (デフォルト1)
-    SearchQueryMylistDeny:
-      name: with_mylisted
-      in: query
-      schema:
-        type: integer
-        enum:
-          - 0
-          - 1
-        example: 0
-        default: 0
-        minimum: 0
-        maximum: 1
-      description: マイリスト追加済みかを取得する0/1 (デフォルト0)
-    SearchQueryPerPage:
-      name: per_page
-      in: query
-      required: false
-      schema:
-        type: integer
-        default: 20
-        enum:
-          - 20
-          - 40
-          - 60
-          - 80
-          - 100
-        example: 20
-        minimum: 20
-        maximum: 100
-      description: 1ページ辺りの要素数
-    SearchQuerySortCatalog:
-      in: query
-      schema:
-        type: string
-        default: d
-        enum:
-          - c
-          - d
-          - l
-          - 'n'
-        example: d
-      description: 'ソート方法 c:ヒット数 d:最終更新 l:いいね数 n:名前'
-      name: sort
-  securitySchemes:
-    Authorization:
-      type: http
-      scheme: bearer
-tags:
-  - name: activitypub
 security:
-  - Authorization: []
+- Authorization: []
+servers:
+- description: Prod
+  url: https://api.gochiusa.team
+- description: Staging
+  url: https://api-next.gochiusa.team
+- description: Dev
+  url: http://127.0.0.1:8080
+tags:
+- name: activitypub

@@ -1,476 +1,1079 @@
-openapi: 3.0.0
-info:
-  title: UsagiBooru Tags API
-  version: '2.0'
-  contact:
-    name: Omado
-    url: 'https://twitter.com/shallow_omado'
-    email: dsgamer777@gmail.com
-  description: タグ関連API
-  license:
-    name: GPLv3
-    url: 'https://www.gnu.org/licenses/gpl-3.0.ja.html'
-servers:
-  - url: 'http://127.0.0.1:8080'
-    description: Dev
-paths:
-  /tags:
-    post:
-      summary: Add tag
-      operationId: addTag
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TagStruct'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      tags:
-        - tags
-      description: |-
-        タグを追加します
-        管理者のみリクエスト可能です
-      deprecated: true
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TagStruct'
-  '/tags/{tagID}':
-    parameters:
-      - schema:
-          type: integer
-        name: tagID
-        in: path
-        required: true
-        description: 対象のタグID
-    get:
-      summary: Get tag
-      tags:
-        - tags
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TagStruct'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      operationId: getTag
-      description: タグ情報を取得します
-    delete:
-      summary: Delete tag
-      operationId: deleteTag
-      tags:
-        - tags
-      description: |-
-        タグを削除します
-        (既にイラストに属しているタグの場合削除できません)
-      responses:
-        '204':
-          description: No Content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '409':
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-    patch:
-      summary: Edit tag
-      operationId: editTag
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TagStruct'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      tags:
-        - tags
-      description: |-
-        タグ情報を編集します
-        タグ種別の変更もできます
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TagStruct'
-  /tags/finds:
-    get:
-      summary: Find tags by keyword
-      tags:
-        - tags
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetFindTagsResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      operationId: findTags
-      parameters:
-        - schema:
-            type: string
-          in: query
-          name: keyword
-          description: 検索したいワードを指定します
-      description: キーワードからタグを検索します
 components:
+  parameters:
+    SearchQueryMylistAllow:
+      description: マイリスト追加済みかを取得する0/1 (デフォルト1)
+      in: query
+      name: with_mylisted
+      required: false
+      schema:
+        default: 1
+        enum:
+        - 1
+        - 0
+        example: 1
+        format: int32
+        maximum: 1
+        minimum: 0
+        type: integer
+    SearchQueryMylistDeny:
+      description: マイリスト追加済みかを取得する0/1 (デフォルト0)
+      in: query
+      name: with_mylisted
+      schema:
+        default: 0
+        enum:
+        - 0
+        - 1
+        example: 0
+        maximum: 1
+        minimum: 0
+        type: integer
+    SearchQueryOrder:
+      description: ソート方向 d:降順(大→小) a:昇順(小→大)
+      in: query
+      name: order
+      required: false
+      schema:
+        default: d
+        enum:
+        - d
+        - a
+        example: d
+        maxLength: 1
+        minLength: 1
+        type: string
+    SearchQueryPage:
+      description: 'ページ番号 (NOTE: 1ページ辺りの応答は20件)'
+      in: query
+      name: page
+      required: false
+      schema:
+        minimum: 1
+        type: integer
+    SearchQueryPerPage:
+      description: 1ページ辺りの要素数
+      in: query
+      name: per_page
+      required: false
+      schema:
+        default: 20
+        enum:
+        - 20
+        - 40
+        - 60
+        - 80
+        - 100
+        example: 20
+        maximum: 100
+        minimum: 20
+        type: integer
+    SearchQuerySort:
+      description: ソート方法 l:いいね数順 d:投稿日順
+      in: query
+      name: sort
+      required: false
+      schema:
+        default: d
+        enum:
+        - l
+        - d
+        example: d
+        type: string
+    SearchQuerySortCatalog:
+      description: ソート方法 c:ヒット数 d:最終更新 l:いいね数 n:名前
+      in: query
+      name: sort
+      schema:
+        default: d
+        enum:
+        - c
+        - d
+        - l
+        - n
+        example: d
+        type: string
   schemas:
     GeneralMessageResponse:
-      title: GeneralMessageResponse
-      type: object
+      description: 共通の応答構造体(404/401/400等を返す際に使用)
       properties:
         message:
-          type: string
           description: 応答メッセージ(何が間違っているかの詳細)
           minLength: 1
+          type: string
       required:
-        - message
+      - message
+      title: GeneralMessageResponse
+      type: object
       x-examples:
-        not-found:
-          message: Specified content was not found.
-        no-permission:
-          message: You don't have enough permission to do it.
         bad-request:
           message: Your request body is wrong.
         locked:
           message: Specified content is referenced from other content.
-    TagStruct:
-      title: TagStruct
+        no-permission:
+          message: You don't have enough permission to do it.
+        not-found:
+          message: Specified content was not found.
+    GetArtTagsResponse:
+      description: イラストに設定されているタグ一覧の応答構造体
+      properties:
+        tags:
+          description: タグ情報
+          properties:
+            characters:
+              description: キャラクタータグ
+              items:
+                $ref: '#/components/schemas/TagStruct'
+              type: array
+            copyrights:
+              description: 出典タグ
+              items:
+                $ref: '#/components/schemas/TagStruct'
+              type: array
+            generals:
+              description: 一般タグ
+              items:
+                $ref: '#/components/schemas/TagStruct'
+              type: array
+            metas:
+              description: システムタグ
+              items:
+                $ref: '#/components/schemas/TagStruct'
+              type: array
+          type: object
+      title: GetArtTagsResponse
       type: object
       x-examples:
-        example-copyright:
-          tagID: 1
-          type: copyright
-          name: ご注文はうさぎですか?
-          description: こころぴょんぴょんする漫画 from 芳文社
-          nsfw: false
-          issuer:
-            accountID: 1
-            name: お窓
-          parent: []
-          child: []
-          count: 0
-          lcount: 0
-        example-character:
-          tagID: 2
-          type: character
-          name: 香風智乃
-          description: ラビットハウスの一人娘。クールな性格だがココアのことは嫌いじゃない…!? コーヒーに詳しいしっかり者。
-          nsfw: false
-          issuer:
-            accountID: 1
-            name: お窓
-          parent: []
-          child: []
-          count: 0
-          lcount: 0
-        example-general:
-          tagID: 3
-          type: general
-          name: ロリ
-          description: 小さな女の子
-          nsfw: false
-          issuer:
-            accountID: 1
-            name: お窓
-          parent: []
-          child: []
-          count: 0
-          lcount: 0
-        example-meta:
-          tagID: 4
-          type: meta
-          name: FHD
-          description: フルHD並の解像度がある画像
-          nsfw: false
-          issuer:
-            accountID: 1
-            name: お窓
-          parent: []
-          child: []
-          count: 0
-          lcount: 0
-      description: タグデータモデル
+        example:
+          tags:
+            characters:
+            - name: 香風智乃
+              nsfw: false
+              tagID: 2
+            copyrights:
+            - name: ご注文はうさぎですか?
+              nsfw: false
+              tagID: 1
+            generals:
+            - name: ロリ
+              nsfw: false
+              tagID: 3
+            metas:
+            - name: FHD
+              nsfw: false
+              tagID: 4
+    GetCatalogTagResponse:
+      description: タグ一覧の応答構造体
       properties:
-        tagID:
-          type: integer
-          minimum: 1
-          description: サイト内通しタグ番号
-        type:
-          type: string
-          description: タグ種別
-          enum:
-            - copyright
-            - character
-            - general
-            - meta
-          default: general
-          example: general
-        name:
-          type: string
-          minLength: 1
-          maxLength: 20
-          description: タグの名称
-        description:
-          type: string
-          description: タグの説明文
-          maxLength: 280
-          minLength: 0
-        nsfw:
-          type: boolean
-          description: アダルトコンテンツが含まれるタグか
-          default: false
-        issuer:
-          $ref: '#/components/schemas/LightAccountStruct'
-        parent:
-          type: array
-          description: 親となるタグ
-          minItems: 0
+        contents:
           items:
-            $ref: '#/components/schemas/LightTagStruct'
-        child:
+            $ref: '#/components/schemas/TagStruct'
+          minItems: 1
           type: array
-          description: 子となるタグ
-          minItems: 0
-          items:
-            $ref: '#/components/schemas/LightTagStruct'
-        count:
-          type: integer
-          description: タグに属する作品数
-          example: 0
-          minimum: 0
-          default: 0
-        lcount:
-          type: integer
-          description: タグに属するいいね数
-          minimum: 0
-          example: 0
-          default: 0
+          uniqueItems: true
+        pagination:
+          $ref: '#/components/schemas/PaginationStruct'
+      required:
+      - pagination
+      - contents
+      title: GetCatalogTagResponse
+      type: object
+      x-examples:
+        example:
+          contents:
+          - child: []
+            count: 0
+            description: こころぴょんぴょんする漫画 from 芳文社
+            issuer:
+              accountID: 1
+              name: お窓
+            lcount: 0
+            name: ご注文はうさぎですか?
+            nsfw: false
+            parent: []
+            tagID: 1
+            type: copyright
+          - child: []
+            count: 0
+            description: ラビットハウスの一人娘。クールな性格だがココアのことは嫌いじゃない…!? コーヒーに詳しいしっかり者。
+            issuer:
+              accountID: 1
+              name: お窓
+            lcount: 0
+            name: 香風智乃
+            nsfw: false
+            parent: []
+            tagID: 2
+            type: character
+          - child: []
+            count: 0
+            description: 小さな女の子
+            issuer:
+              accountID: 1
+              name: お窓
+            lcount: 0
+            name: ロリ
+            nsfw: false
+            parent: []
+            tagID: 3
+            type: general
+          - child: []
+            count: 0
+            description: フルHD並の解像度がある画像
+            issuer:
+              accountID: 1
+              name: お窓
+            lcount: 0
+            name: FHD
+            nsfw: false
+            parent: []
+            tagID: 4
+            type: meta
+          pagination:
+            count: 4
+            current: 1
+            pages: 1
+            perPage: 20
+            title: タグ一覧
+            type: tag
     GetFindTagsResponse:
+      description: タグ一覧からの検索結果の応答構造体
+      properties:
+        tags:
+          items:
+            $ref: '#/components/schemas/TagStruct'
+          type: array
       title: GetFindTagsResponse
       type: object
       x-examples:
         example:
           tags:
-            - tagID: 1
-              type: character
-              name: 香風智乃
-              description: ラビットハウスの一人娘。クールな性格だがココアのことは嫌いじゃない…!? コーヒーに詳しいしっかり者。
-              nsfw: false
-              count: 0
-              lcount: 0
+          - count: 0
+            description: ラビットハウスの一人娘。クールな性格だがココアのことは嫌いじゃない…!? コーヒーに詳しいしっかり者。
+            lcount: 0
+            name: 香風智乃
+            nsfw: false
+            tagID: 1
+            type: character
+    GetNavigationGeneralResponse:
+      description: ナビゲーション用情報一覧の汎用応答構造体
       properties:
-        tags:
-          type: array
+        navigations:
           items:
-            $ref: '#/components/schemas/TagStruct'
+            $ref: '#/components/schemas/NavigationStruct'
+          minItems: 1
+          type: array
+          uniqueItems: true
+      title: GetNavigationGeneralResponse
+      type: object
+      x-examples:
+        example-artist:
+          navigations:
+          - count: 1
+            id: 1
+            name: 彩電
+        example-character:
+          navigations:
+          - count: 1
+            id: 1
+            name: 香風智乃
+        example-copyright:
+          navigations:
+          - count: 1
+            id: 1
+            name: ご注文はうさぎですか?
+        example-general:
+          navigations:
+          - count: 1
+            id: 1
+            name: ロリ
+        example-uploader:
+          navigations:
+          - count: 1
+            id: 1
+            name: お窓
     LightAccountStruct:
+      description: アカウント情報の簡易構造体(読み取り専用)
+      properties:
+        accountID:
+          description: アカウントID
+          example: 1
+          minimum: 1
+          type: integer
+        name:
+          description: アカウント名
+          example: お窓
+          type: string
       title: LightAccountStruct
       type: object
       x-examples:
         example:
           accountID: 1
           name: お窓
-      properties:
-        accountID:
-          type: integer
-          description: アカウントID
-          example: 1
-          minimum: 1
-        name:
-          type: string
-          description: アカウント名
-          example: お窓
     LightTagStruct:
+      description: タグ情報の簡易構造体(読み取り専用)
+      properties:
+        name:
+          description: タグの名称
+          example: 香風智乃
+          maxLength: 20
+          minLength: 1
+          type: string
+        tagID:
+          description: サイト内通しタグ番号
+          example: 2
+          minimum: 1
+          type: integer
       title: LightTagStruct
       type: object
       x-examples:
-        example-copyright:
-          tagID: 1
-          type: copyright
-          name: ご注文はうさぎですか?
         example-character:
+          name: 香風智乃
           tagID: 2
           type: character
-          name: 香風智乃
+        example-copyright:
+          name: ご注文はうさぎですか?
+          tagID: 1
+          type: copyright
         example-general:
+          name: ロリ
           tagID: 3
           type: general
-          name: ロリ
         example-meta:
+          name: FHD
           tagID: 4
           type: meta
-          name: FHD
-      description: タグデータ簡易モデル
+    NavigationStruct:
+      description: サイト内上部ナビゲーション情報の構造体(読み取り専用)
       properties:
-        tagID:
-          type: integer
+        count:
+          example: 1204
           minimum: 1
-          description: サイト内通しタグ番号
-          example: 2
+          type: integer
+        id:
+          example: 1
+          minimum: 1
+          type: integer
         name:
-          type: string
-          minLength: 1
-          maxLength: 20
-          description: タグの名称
           example: 香風智乃
-  parameters:
-    SearchQuerySort:
-      name: sort
-      in: query
-      required: false
-      schema:
-        type: string
-        enum:
-          - l
-          - d
-        example: d
-        default: d
-      description: 'ソート方法 l:いいね数順 d:投稿日順'
-    SearchQueryOrder:
-      name: order
-      in: query
-      required: false
-      schema:
-        type: string
-        enum:
-          - d
-          - a
-        default: d
-        example: d
-        minLength: 1
-        maxLength: 1
-      description: 'ソート方向 d:降順(大→小) a:昇順(小→大)'
-    SearchQueryPage:
-      name: page
-      in: query
-      required: false
-      schema:
-        type: integer
-        minimum: 1
-      description: 'ページ番号 (NOTE: 1ページ辺りの応答は20件)'
-    SearchQueryMylistAllow:
-      name: with_mylisted
-      in: query
-      required: false
-      schema:
-        type: integer
-        format: int32
-        default: 1
-        enum:
-          - 1
-          - 0
-        example: 1
-        minimum: 0
-        maximum: 1
-      description: マイリスト追加済みかを取得する0/1 (デフォルト1)
-    SearchQueryMylistDeny:
-      name: with_mylisted
-      in: query
-      schema:
-        type: integer
-        enum:
-          - 0
-          - 1
-        example: 0
-        default: 0
-        minimum: 0
-        maximum: 1
-      description: マイリスト追加済みかを取得する0/1 (デフォルト0)
-    SearchQueryPerPage:
-      name: per_page
-      in: query
-      required: false
-      schema:
-        type: integer
-        default: 20
-        enum:
+          maxLength: 50
+          minLength: 1
+          type: string
+      required:
+      - name
+      - id
+      - count
+      title: NavigationStruct
+      type: object
+      x-examples:
+        example:
+          count: 1204
+          id: 1
+          name: 香風智乃
+    PaginationStruct:
+      description: ページネーション情報の構造体
+      properties:
+        count:
+          default: 0
+          description: ヒット総数
+          example: 1
+          minimum: 0
+          type: integer
+        current:
+          default: 1
+          description: 現在のページ
+          example: 1
+          minimum: 1
+          type: integer
+        pages:
+          default: 1
+          description: ページ数
+          example: 1
+          minimum: 1
+          type: integer
+        perPage:
+          default: 20
+          description: ページ毎の取得数
+          enum:
           - 20
           - 40
           - 60
           - 80
           - 100
-        example: 20
-        minimum: 20
-        maximum: 100
-      description: 1ページ辺りの要素数
-    SearchQuerySortCatalog:
-      in: query
-      schema:
-        type: string
-        default: d
-        enum:
-          - c
-          - d
-          - l
-          - 'n'
-        example: d
-      description: 'ソート方法 c:ヒット数 d:最終更新 l:いいね数 n:名前'
-      name: sort
+          example: 20
+          format: int32
+          maximum: 100
+          minimum: 20
+          type: integer
+        title:
+          description: ページネーションタイトル(表示用)
+          example: 香風智乃
+          minLength: 1
+          type: string
+        type:
+          default: tag
+          description: ページネーション種別(表示用)
+          enum:
+          - artist
+          - tag
+          - uploader
+          - notify-client
+          - notify-condition
+          - mute
+          - follow
+          - article
+          - mylist-list
+          - art
+          - upload-history
+          example: tag
+          type: string
+      required:
+      - title
+      - type
+      - count
+      - current
+      - pages
+      - perPage
+      title: PaginationStruct
+      type: object
+      x-examples:
+        example:
+          count: 1
+          current: 1
+          pages: 1
+          perPage: 20
+          title: 香風智乃
+          type: tag
+    PostMachineLearningGeneralRequest:
+      description: 機械学習の処理を行うエンドポイントの汎用要求構造体
+      properties:
+        image:
+          description: Binary型の画像
+          format: binary
+          type: string
+      required:
+      - image
+      title: PostMachineLearningGeneralRequest
+      type: object
+      x-examples: {}
+    PostMachineLearningGeneralResponse:
+      description: 機械学習の処理を行うエンドポイントの汎用応答構造体
+      properties:
+        url:
+          description: Polling用URLを返す(すぐに終わらん)
+          format: iri-reference
+          type: string
+      required:
+      - url
+      title: PostMachineLearningGeneralResponse
+      type: object
+      x-examples:
+        example:
+          url: https://api.example.com/ml/polling/1
+    PostPredictTagsResponse:
+      description: 画像からタグを推定した結果の応答構造体
+      properties:
+        tags:
+          items:
+            properties:
+              accuracy:
+                description: 推定の確実度
+                example: 0.8889
+                maximum: 1
+                minimum: 0
+                type: number
+              name:
+                description: タグ名
+                example: kafuu_chino
+                maxLength: 100
+                minLength: 1
+                type: string
+            required:
+            - name
+            - accuracy
+            type: object
+          maxItems: 100
+          minItems: 0
+          type: array
+      required:
+      - tags
+      title: PostPredictTagsResponse
+      type: object
+      x-examples:
+        example-1:
+          tags:
+          - accuracy: 0.8889
+            name: kafuu_chino
+    PostReportGeneralRequest:
+      description: 通報を行う場合の汎用要求構造体
+      properties:
+        msg:
+          description: 通報本文
+          minLength: 1
+          type: string
+        type:
+          default: bad-name
+          description: 通報種別 1:不適切名称 2:不適切年齢 3:規約違反 4:法律違反
+          enum:
+          - bad-name
+          - wrong-info
+          - violation-rules
+          - dmca
+          example: bad-name
+          type: string
+      required:
+      - type
+      - msg
+      title: ReportGeneralRequest
+      type: object
+      x-examples:
+        example-1:
+          msg: XSSしようとしてる人が居るみたいです、なんとかしてください
+          type: bad-name
+        example-2:
+          msg: どうみてもエッチですあーいけません!
+          type: wrong-info
+        example-3:
+          msg: 完全に同一の画像を上げ続け、運営を妨害している人が居ます
+          type: violation-rules
+        example-4:
+          msg: DMCA Request
+          type: dmca
+    PutArtTagsRequest:
+      description: イラストのタグ一覧をIDを用いて上書きする場合の要求構造体
+      properties:
+        tagID:
+          description: 追加したいタグ一覧
+          items:
+            type: integer
+          minItems: 1
+          type: array
+      required:
+      - tagID
+      title: PutArtTagsRequest
+      type: object
+      x-examples:
+        example-1:
+          tagID:
+          - 1
+          - 2
+          - 3
+    TagStruct:
+      description: タグ情報の構造体
+      properties:
+        child:
+          description: 子となるタグ
+          items:
+            $ref: '#/components/schemas/LightTagStruct'
+          minItems: 0
+          type: array
+        count:
+          default: 0
+          description: タグに属する作品数
+          example: 0
+          minimum: 0
+          type: integer
+        description:
+          description: タグの説明文
+          maxLength: 280
+          minLength: 0
+          type: string
+        issuer:
+          $ref: '#/components/schemas/LightAccountStruct'
+        lcount:
+          default: 0
+          description: タグに属するいいね数
+          example: 0
+          minimum: 0
+          type: integer
+        name:
+          description: タグの名称
+          maxLength: 20
+          minLength: 1
+          type: string
+        nsfw:
+          default: false
+          description: アダルトコンテンツが含まれるタグか
+          type: boolean
+        parent:
+          description: 親となるタグ
+          items:
+            $ref: '#/components/schemas/LightTagStruct'
+          minItems: 0
+          type: array
+        tagID:
+          description: サイト内通しタグ番号
+          minimum: 1
+          type: integer
+        type:
+          default: general
+          description: タグ種別
+          enum:
+          - copyright
+          - character
+          - general
+          - meta
+          example: general
+          type: string
+      title: TagStruct
+      type: object
+      x-examples:
+        example-character:
+          child: []
+          count: 0
+          description: ラビットハウスの一人娘。クールな性格だがココアのことは嫌いじゃない…!? コーヒーに詳しいしっかり者。
+          issuer:
+            accountID: 1
+            name: お窓
+          lcount: 0
+          name: 香風智乃
+          nsfw: false
+          parent: []
+          tagID: 2
+          type: character
+        example-copyright:
+          child: []
+          count: 0
+          description: こころぴょんぴょんする漫画 from 芳文社
+          issuer:
+            accountID: 1
+            name: お窓
+          lcount: 0
+          name: ご注文はうさぎですか?
+          nsfw: false
+          parent: []
+          tagID: 1
+          type: copyright
+        example-general:
+          child: []
+          count: 0
+          description: 小さな女の子
+          issuer:
+            accountID: 1
+            name: お窓
+          lcount: 0
+          name: ロリ
+          nsfw: false
+          parent: []
+          tagID: 3
+          type: general
+        example-meta:
+          child: []
+          count: 0
+          description: フルHD並の解像度がある画像
+          issuer:
+            accountID: 1
+            name: お窓
+          lcount: 0
+          name: FHD
+          nsfw: false
+          parent: []
+          tagID: 4
+          type: meta
   securitySchemes:
     Authorization:
-      type: http
       scheme: bearer
-tags:
-  - name: tags
+      type: http
+info:
+  contact:
+    email: dsgamer777@gmail.com
+    name: Omado
+    url: https://twitter.com/shallow_omado
+  description: Tags related api (required)
+  license:
+    name: AGPLv3
+    url: https://www.gnu.org/licenses/agpl-3.0.ja.html
+  title: UsagiBooru Tags API
+  version: '2.0'
+openapi: 3.0.0
+paths:
+  /arts/{artID}/tags:
+    get:
+      description: 指定したイラストに付いているタグのみを一覧で取得します
+      operationId: getArtTags
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetArtTagsResponse'
+          description: OK
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+      summary: Get art tags
+      tags:
+      - arts
+    parameters:
+    - description: 対象のイラストID
+      in: path
+      name: artID
+      required: true
+      schema:
+        type: integer
+    patch:
+      description: '指定したイラストのタグ一覧に、与えられたIDのタグを設定します
+
+        削除も同様にこのエンドポイントを用います
+
+        (イラスト本体の編集時に付けられたタグ名から
+
+        自動的にタグIDを引き出し追加/削除を行う処理が追加されたため
+
+        こちらのエンドポイントを使用する必要はありません)'
+      operationId: editArtTags
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutArtTagsRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetArtTagsResponse'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Bad Request
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+      summary: Edit art tags
+      tags:
+      - arts
+  /catalog/tags:
+    get:
+      description: タグ一覧を取得します
+      operationId: getTagList
+      parameters:
+      - $ref: '#/components/parameters/SearchQueryPage'
+      - $ref: '#/components/parameters/SearchQuerySortCatalog'
+      - $ref: '#/components/parameters/SearchQueryOrder'
+      - $ref: '#/components/parameters/SearchQueryPerPage'
+      responses:
+        '200':
+          content:
+            application/json:
+              examples: {}
+              schema:
+                $ref: '#/components/schemas/GetCatalogTagResponse'
+          description: ヒットしたデータが応答のdata->contentsに配列で返却されます
+      summary: Get tag list
+      tags:
+      - catalog
+    parameters: []
+  /ml/predict/tags:
+    post:
+      description: '指定された画像のタグをDeepDanbooruで推測します
+
+        (管理者のみ使用可)'
+      operationId: predictTags
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostMachineLearningGeneralRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostMachineLearningGeneralResponse'
+          description: OK
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Too Many Requests
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Service Unavailable
+      summary: Predict image tags
+      tags:
+      - ml
+  /ml/predict/tags/result/{resultID}:
+    get:
+      description: 'タグ推定の処理結果を返します
+
+        結果データは1日で削除されます'
+      operationId: getTagPredictResult
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostPredictTagsResponse'
+          description: OK
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+      summary: Get tags predict result
+      tags:
+      - ml
+    parameters:
+    - description: 対象の結果ID
+      in: path
+      name: resultID
+      required: true
+      schema:
+        type: integer
+  /navigations/tags:
+    get:
+      description: 'イラスト数の多いタグ上位5件を取得します
+
+        サイト内上部 ナビゲーションメニューで使用しています'
+      operationId: getTagNavigation
+      responses:
+        '200':
+          content:
+            application/json:
+              examples: {}
+              schema:
+                $ref: '#/components/schemas/GetNavigationGeneralResponse'
+          description: 応答のdataに配列で返却されます
+      summary: Get tag navigation tab (for site)
+      tags:
+      - navigations
+  /report/tags/{tagID}:
+    parameters:
+    - description: 対象のタグID
+      in: path
+      name: tagID
+      required: true
+      schema:
+        type: integer
+    post:
+      description: '指定したタグを運営に通報します
+
+        むやみに利用するとアカウントが停止される可能性があります'
+      operationId: reportTag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostReportGeneralRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Bad Request
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+      summary: Report tag
+      tags:
+      - report
+  /tags:
+    post:
+      deprecated: true
+      description: 'タグを追加します
+
+        管理者のみリクエスト可能です'
+      operationId: addTag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagStruct'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagStruct'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Bad Request
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Forbidden
+      summary: Add tag
+      tags:
+      - tags
+  /tags/finds:
+    get:
+      description: キーワードからタグを検索します
+      operationId: findTags
+      parameters:
+      - description: 検索したいワードを指定します
+        in: query
+        name: keyword
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetFindTagsResponse'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Bad Request
+      summary: Find tags by keyword
+      tags:
+      - tags
+  /tags/{tagID}:
+    delete:
+      description: 'タグを削除します
+
+        (既にイラストに属しているタグの場合削除できません)'
+      operationId: deleteTag
+      responses:
+        '204':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: No Content
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Conflict
+      summary: Delete tag
+      tags:
+      - tags
+    get:
+      description: タグ情報を取得します
+      operationId: getTag
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagStruct'
+          description: OK
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+      summary: Get tag
+      tags:
+      - tags
+    parameters:
+    - description: 対象のタグID
+      in: path
+      name: tagID
+      required: true
+      schema:
+        type: integer
+    patch:
+      description: 'タグ情報を編集します
+
+        タグ種別の変更もできます'
+      operationId: editTag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagStruct'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagStruct'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Bad Request
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+      summary: Edit tag
+      tags:
+      - tags
 security:
-  - Authorization: []
+- Authorization: []
+servers:
+- description: Prod
+  url: https://api.gochiusa.team
+- description: Staging
+  url: https://api-next.gochiusa.team
+- description: Dev
+  url: http://127.0.0.1:8080
+tags:
+- name: report
+- name: navigations
+- name: tags
+- name: arts
+- name: catalog
+- name: ml

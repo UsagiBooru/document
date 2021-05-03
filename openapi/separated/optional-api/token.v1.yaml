@@ -1,205 +1,209 @@
-openapi: 3.0.0
-info:
-  title: UsagiBooru Token API
-  version: '2.0'
-  contact:
-    name: Omado
-    url: 'https://twitter.com/shallow_omado'
-    email: dsgamer777@gmail.com
-  description: |-
-    永続トークン関連API
-    (Optional)
-  license:
-    name: GPLv3
-    url: 'https://www.gnu.org/licenses/gpl-3.0.ja.html'
-servers:
-  - url: 'http://127.0.0.1:8080'
-    description: Dev
-paths:
-  /token/generate:
-    parameters: []
-    post:
-      summary: Reissue api key
-      operationId: reissueToken
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PostGenerateTokenResponse'
-      description: Bot等向けの長期間有効なアクセストークンを生成します
-      tags:
-        - token
-  /token/verify:
-    post:
-      summary: Verify token
-      operationId: verifyToken
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      tags:
-        - token
-      description: トークンが使用可能か検証します
-  /token/revoke:
-    post:
-      summary: Revoke token
-      operationId: revokeToken
-      responses:
-        '204':
-          description: No Content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      description: 発行済の長期間有効トークンを無効化します
-      tags:
-        - token
 components:
+  parameters:
+    SearchQueryMylistAllow:
+      description: マイリスト追加済みかを取得する0/1 (デフォルト1)
+      in: query
+      name: with_mylisted
+      required: false
+      schema:
+        default: 1
+        enum:
+        - 1
+        - 0
+        example: 1
+        format: int32
+        maximum: 1
+        minimum: 0
+        type: integer
+    SearchQueryMylistDeny:
+      description: マイリスト追加済みかを取得する0/1 (デフォルト0)
+      in: query
+      name: with_mylisted
+      schema:
+        default: 0
+        enum:
+        - 0
+        - 1
+        example: 0
+        maximum: 1
+        minimum: 0
+        type: integer
+    SearchQueryOrder:
+      description: ソート方向 d:降順(大→小) a:昇順(小→大)
+      in: query
+      name: order
+      required: false
+      schema:
+        default: d
+        enum:
+        - d
+        - a
+        example: d
+        maxLength: 1
+        minLength: 1
+        type: string
+    SearchQueryPage:
+      description: 'ページ番号 (NOTE: 1ページ辺りの応答は20件)'
+      in: query
+      name: page
+      required: false
+      schema:
+        minimum: 1
+        type: integer
+    SearchQueryPerPage:
+      description: 1ページ辺りの要素数
+      in: query
+      name: per_page
+      required: false
+      schema:
+        default: 20
+        enum:
+        - 20
+        - 40
+        - 60
+        - 80
+        - 100
+        example: 20
+        maximum: 100
+        minimum: 20
+        type: integer
+    SearchQuerySort:
+      description: ソート方法 l:いいね数順 d:投稿日順
+      in: query
+      name: sort
+      required: false
+      schema:
+        default: d
+        enum:
+        - l
+        - d
+        example: d
+        type: string
+    SearchQuerySortCatalog:
+      description: ソート方法 c:ヒット数 d:最終更新 l:いいね数 n:名前
+      in: query
+      name: sort
+      schema:
+        default: d
+        enum:
+        - c
+        - d
+        - l
+        - n
+        example: d
+        type: string
   schemas:
+    GeneralMessageResponse:
+      description: 共通の応答構造体(404/401/400等を返す際に使用)
+      properties:
+        message:
+          description: 応答メッセージ(何が間違っているかの詳細)
+          minLength: 1
+          type: string
+      required:
+      - message
+      title: GeneralMessageResponse
+      type: object
+      x-examples:
+        bad-request:
+          message: Your request body is wrong.
+        locked:
+          message: Specified content is referenced from other content.
+        no-permission:
+          message: You don't have enough permission to do it.
+        not-found:
+          message: Specified content was not found.
     PostGenerateTokenResponse:
+      description: APIトークンを作成した結果の応答構造体
+      properties:
+        apiKey:
+          minLength: 1
+          type: string
       title: PostGenerateTokenResponse
       type: object
       x-examples:
         example:
           apiKey: DUMMY_API_KEY
-      properties:
-        apiKey:
-          type: string
-          minLength: 1
-    GeneralMessageResponse:
-      title: GeneralMessageResponse
-      type: object
-      properties:
-        message:
-          type: string
-          description: 応答メッセージ(何が間違っているかの詳細)
-          minLength: 1
-      required:
-        - message
-      x-examples:
-        not-found:
-          message: Specified content was not found.
-        no-permission:
-          message: You don't have enough permission to do it.
-        bad-request:
-          message: Your request body is wrong.
-        locked:
-          message: Specified content is referenced from other content.
-  parameters:
-    SearchQuerySort:
-      name: sort
-      in: query
-      required: false
-      schema:
-        type: string
-        enum:
-          - l
-          - d
-        example: d
-        default: d
-      description: 'ソート方法 l:いいね数順 d:投稿日順'
-    SearchQueryOrder:
-      name: order
-      in: query
-      required: false
-      schema:
-        type: string
-        enum:
-          - d
-          - a
-        default: d
-        example: d
-        minLength: 1
-        maxLength: 1
-      description: 'ソート方向 d:降順(大→小) a:昇順(小→大)'
-    SearchQueryPage:
-      name: page
-      in: query
-      required: false
-      schema:
-        type: integer
-        minimum: 1
-      description: 'ページ番号 (NOTE: 1ページ辺りの応答は20件)'
-    SearchQueryMylistAllow:
-      name: with_mylisted
-      in: query
-      required: false
-      schema:
-        type: integer
-        format: int32
-        default: 1
-        enum:
-          - 1
-          - 0
-        example: 1
-        minimum: 0
-        maximum: 1
-      description: マイリスト追加済みかを取得する0/1 (デフォルト1)
-    SearchQueryMylistDeny:
-      name: with_mylisted
-      in: query
-      schema:
-        type: integer
-        enum:
-          - 0
-          - 1
-        example: 0
-        default: 0
-        minimum: 0
-        maximum: 1
-      description: マイリスト追加済みかを取得する0/1 (デフォルト0)
-    SearchQueryPerPage:
-      name: per_page
-      in: query
-      required: false
-      schema:
-        type: integer
-        default: 20
-        enum:
-          - 20
-          - 40
-          - 60
-          - 80
-          - 100
-        example: 20
-        minimum: 20
-        maximum: 100
-      description: 1ページ辺りの要素数
-    SearchQuerySortCatalog:
-      in: query
-      schema:
-        type: string
-        default: d
-        enum:
-          - c
-          - d
-          - l
-          - 'n'
-        example: d
-      description: 'ソート方法 c:ヒット数 d:最終更新 l:いいね数 n:名前'
-      name: sort
   securitySchemes:
     Authorization:
-      type: http
       scheme: bearer
-tags:
-  - name: token
+      type: http
+info:
+  contact:
+    email: dsgamer777@gmail.com
+    name: Omado
+    url: https://twitter.com/shallow_omado
+  description: Token related api (optional)
+  license:
+    name: AGPLv3
+    url: https://www.gnu.org/licenses/agpl-3.0.ja.html
+  title: UsagiBooru Token API
+  version: '2.0'
+openapi: 3.0.0
+paths:
+  /token/generate:
+    parameters: []
+    post:
+      description: Bot等向けの長期間有効なアクセストークンを生成します
+      operationId: reissueToken
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostGenerateTokenResponse'
+          description: OK
+      summary: Reissue api key
+      tags:
+      - token
+  /token/revoke:
+    post:
+      description: 発行済の長期間有効トークンを無効化します
+      operationId: revokeToken
+      responses:
+        '204':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: No Content
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Unauthorized
+      summary: Revoke token
+      tags:
+      - token
+  /token/verify:
+    post:
+      description: トークンが使用可能か検証します
+      operationId: verifyToken
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Unauthorized
+      summary: Verify token
+      tags:
+      - token
 security:
-  - Authorization: []
+- Authorization: []
+servers:
+- description: Prod
+  url: https://api.gochiusa.team
+- description: Staging
+  url: https://api-next.gochiusa.team
+- description: Dev
+  url: http://127.0.0.1:8080
+tags:
+- name: token

@@ -1,198 +1,995 @@
-openapi: 3.0.0
-info:
-  title: UsagiBooru Upload API
-  version: '2.0'
-  contact:
-    name: Omado
-    url: 'https://twitter.com/shallow_omado'
-    email: dsgamer777@gmail.com
-  description: 投稿API
-  license:
-    name: GPLv3
-    url: 'https://www.gnu.org/licenses/gpl-3.0.ja.html'
-servers:
-  - url: 'http://127.0.0.1:8080'
-    description: Dev
-paths:
-  /upload:
-    post:
-      summary: Upload content
-      operationId: uploadContent
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PostUploadResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '429':
-          description: Too Many Requests
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      description: |-
-        画像や動画を投稿するエンドポイントです
-        むやみに利用するとアカウントが停止される可能性があります
-      tags:
-        - upload
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PostUploadRequest'
 components:
+  parameters:
+    SearchQueryMylistAllow:
+      description: マイリスト追加済みかを取得する0/1 (デフォルト1)
+      in: query
+      name: with_mylisted
+      required: false
+      schema:
+        default: 1
+        enum:
+        - 1
+        - 0
+        example: 1
+        format: int32
+        maximum: 1
+        minimum: 0
+        type: integer
+    SearchQueryMylistDeny:
+      description: マイリスト追加済みかを取得する0/1 (デフォルト0)
+      in: query
+      name: with_mylisted
+      schema:
+        default: 0
+        enum:
+        - 0
+        - 1
+        example: 0
+        maximum: 1
+        minimum: 0
+        type: integer
+    SearchQueryOrder:
+      description: ソート方向 d:降順(大→小) a:昇順(小→大)
+      in: query
+      name: order
+      required: false
+      schema:
+        default: d
+        enum:
+        - d
+        - a
+        example: d
+        maxLength: 1
+        minLength: 1
+        type: string
+    SearchQueryPage:
+      description: 'ページ番号 (NOTE: 1ページ辺りの応答は20件)'
+      in: query
+      name: page
+      required: false
+      schema:
+        minimum: 1
+        type: integer
+    SearchQueryPerPage:
+      description: 1ページ辺りの要素数
+      in: query
+      name: per_page
+      required: false
+      schema:
+        default: 20
+        enum:
+        - 20
+        - 40
+        - 60
+        - 80
+        - 100
+        example: 20
+        maximum: 100
+        minimum: 20
+        type: integer
+    SearchQuerySort:
+      description: ソート方法 l:いいね数順 d:投稿日順
+      in: query
+      name: sort
+      required: false
+      schema:
+        default: d
+        enum:
+        - l
+        - d
+        example: d
+        type: string
+    SearchQuerySortCatalog:
+      description: ソート方法 c:ヒット数 d:最終更新 l:いいね数 n:名前
+      in: query
+      name: sort
+      schema:
+        default: d
+        enum:
+        - c
+        - d
+        - l
+        - n
+        example: d
+        type: string
   schemas:
-    GeneralMessageResponse:
-      title: GeneralMessageResponse
+    ActivityPubActorStruct:
+      description: 'ActivityPubのアクター(ユーザー)構造体(仮)
+
+        https://argrath.github.io/activitypub/#actor-objects'
+      properties:
+        '@context':
+          items:
+            properties:
+              '1':
+                properties:
+                  '@language':
+                    minLength: 1
+                    type: string
+                required:
+                - '@language'
+                type: object
+            type: object
+          type: array
+        followers:
+          minLength: 1
+          type: string
+        following:
+          minLength: 1
+          type: string
+        icon:
+          items:
+            type: string
+          type: array
+        id:
+          minLength: 1
+          type: string
+        inbox:
+          minLength: 1
+          type: string
+        liked:
+          minLength: 1
+          type: string
+        name:
+          minLength: 1
+          type: string
+        outbox:
+          minLength: 1
+          type: string
+        preferredUsername:
+          minLength: 1
+          type: string
+        summary:
+          minLength: 1
+          type: string
+        type:
+          minLength: 1
+          type: string
+      required:
+      - type
+      - id
+      - inbox
+      - outbox
+      - preferredUsername
+      - name
+      - summary
+      - icon
+      title: ActivityPubActorStruct
       type: object
+      x-examples:
+        example-1:
+          '@context':
+          - https://www.w3.org/ns/activitystreams
+          - '@language': ja
+          followers: https://kenzoishii.example.com/followers.json
+          following: https://kenzoishii.example.com/following.json
+          icon:
+          - https://kenzoishii.example.com/image/165987aklre4
+          id: https://kenzoishii.example.com/
+          inbox: https://kenzoishii.example.com/inbox.json
+          liked: https://kenzoishii.example.com/liked.json
+          name: 石井健蔵
+          outbox: https://kenzoishii.example.com/feed.json
+          preferredUsername: kenzoishii
+          summary: この方はただの例です
+          type: Person
+    GeneralMessageResponse:
+      description: 共通の応答構造体(404/401/400等を返す際に使用)
       properties:
         message:
-          type: string
           description: 応答メッセージ(何が間違っているかの詳細)
           minLength: 1
+          type: string
       required:
-        - message
+      - message
+      title: GeneralMessageResponse
+      type: object
       x-examples:
-        not-found:
-          message: Specified content was not found.
-        no-permission:
-          message: You don't have enough permission to do it.
         bad-request:
           message: Your request body is wrong.
         locked:
           message: Specified content is referenced from other content.
-    PostUploadRequest:
-      title: PostUploadRequest
-      type: object
-      description: ''
+        no-permission:
+          message: You don't have enough permission to do it.
+        not-found:
+          message: Specified content was not found.
+    GetActivityPubGeneralResponse:
+      description: ActivityPubのBoxを取得した際等に返される汎用応答構造体
       properties:
-        file:
+        '@context':
+          minLength: 1
           type: string
-          description: 投稿するファイル本体
-          format: binary
+        orderedItems:
+          items:
+            properties:
+              name:
+                minLength: 1
+                type: string
+              type:
+                minLength: 1
+                type: string
+            required:
+            - type
+            - name
+          minItems: 1
+          type: array
+          uniqueItems: true
+        summary:
+          minLength: 1
+          type: string
+        totalItems:
+          type: number
+        type:
+          minLength: 1
+          type: string
       required:
-        - file
-    PostUploadResponse:
-      title: PostUploadResponse
+      - '@context'
+      - summary
+      - type
+      - totalItems
+      - orderedItems
+      title: GetActivityPubGeneralResponse
       type: object
       x-examples:
-        success:
-          url: 'https://example.com/hogehoge.jpg'
+        example:
+          '@context': https://www.w3.org/ns/activitystreams
+          orderedItems:
+          - name: A Simple Note
+            type: Note
+          - name: Another Simple Note
+            type: Note
+          summary: Sally's notes
+          totalItems: 2
+          type: OrderedCollection
+    GetCatalogUploaderResponse:
+      description: 投稿者一覧の応答構造体
       properties:
-        url:
-          description: 投稿したファイルのURL(有効期限は1時間とする)
+        contents:
+          items:
+            $ref: '#/components/schemas/UploaderStruct'
+          minItems: 1
+          type: array
+          uniqueItems: true
+        pagination:
+          $ref: '#/components/schemas/PaginationStruct'
+      required:
+      - pagination
+      - contents
+      title: GetCatalogUploaderResponse
+      type: object
+      x-examples:
+        example:
+          contents:
+          - accountID: 1
+            count: 0
+            lcount: 0
+            name: お窓
+          - accountID: 2
+            count: 0
+            lcount: 0
+            name: 香風智乃
+          pagination:
+            count: 2
+            current: 1
+            pages: 1
+            perPage: 20
+            title: 投稿者一覧
+            type: uploader
+    GetNavigationGeneralResponse:
+      description: ナビゲーション用情報一覧の汎用応答構造体
+      properties:
+        navigations:
+          items:
+            $ref: '#/components/schemas/NavigationStruct'
+          minItems: 1
+          type: array
+          uniqueItems: true
+      title: GetNavigationGeneralResponse
+      type: object
+      x-examples:
+        example-artist:
+          navigations:
+          - count: 1
+            id: 1
+            name: 彩電
+        example-character:
+          navigations:
+          - count: 1
+            id: 1
+            name: 香風智乃
+        example-copyright:
+          navigations:
+          - count: 1
+            id: 1
+            name: ご注文はうさぎですか?
+        example-general:
+          navigations:
+          - count: 1
+            id: 1
+            name: ロリ
+        example-uploader:
+          navigations:
+          - count: 1
+            id: 1
+            name: お窓
+    GetSearchGeneralResponse:
+      description: なんらかの手段で検索した場合の汎用応答構造体
+      properties:
+        contents:
+          items:
+            $ref: '#/components/schemas/LightArtStruct'
+          type: array
+        pagination:
+          $ref: '#/components/schemas/PaginationStruct'
+      title: GetSearchGeneralResponse
+      type: object
+      x-examples:
+        example:
+          contents:
+          - artID: 1
+            artists:
+            - artistID: 1
+              name: 彩電
+            caption: Ｃ８９の新刊表紙となっていますっ
+            datetime: '2015-12-27T07:29:00Z'
+            file:
+              ipfsHash:
+                orig: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                thumb: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+            likes: 0
+            mylisted: false
+            mylists: 0
+            nsfw: false
+            originService: Pixiv
+            originUrl: https://www.pixiv.net/artworks/54265978
+            page: 1
+            similarity: 0
+            title: 魔法少女は深淵になにをみるか？
+            uploader:
+              accountID: 1
+              name: お窓
+            views: 0
+          pagination:
+            count: 1
+            current: 1
+            pages: 1
+            perPage: 20
+            title: 香風智乃
+            type: art
+    GetUploadHistoryResponse:
+      description: 投稿履歴情報一覧の応答構造体
+      properties:
+        contents:
+          description: '指定された範囲で一致するデータ
+
+            一致するものがなければ空配列'
+          items:
+            $ref: '#/components/schemas/UploadHistoryStruct'
+          minItems: 0
+          type: array
+          uniqueItems: true
+        pagination:
+          $ref: '#/components/schemas/PaginationStruct'
+      title: GetUploadHistoryResponse
+      type: object
+      x-examples:
+        example:
+          contents:
+          - accountID: 1
+            artID: 1
+            finished: '2021-02-21 22:24:27'
+            started: '2021-02-21 22:24:22'
+            status: 5
+            uploadID: 1
+          pagination:
+            count: 1
+            current: 1
+            pages: 1
+            perPage: 20
+            title: 投稿履歴一覧
+            type: upload-history
+    LightAccountStruct:
+      description: アカウント情報の簡易構造体(読み取り専用)
+      properties:
+        accountID:
+          description: アカウントID
+          example: 1
+          minimum: 1
+          type: integer
+        name:
+          description: アカウント名
+          example: お窓
           type: string
-  parameters:
-    SearchQuerySort:
-      name: sort
-      in: query
-      required: false
-      schema:
-        type: string
-        enum:
-          - l
-          - d
-        example: d
-        default: d
-      description: 'ソート方法 l:いいね数順 d:投稿日順'
-    SearchQueryOrder:
-      name: order
-      in: query
-      required: false
-      schema:
-        type: string
-        enum:
-          - d
-          - a
-        default: d
-        example: d
-        minLength: 1
-        maxLength: 1
-      description: 'ソート方向 d:降順(大→小) a:昇順(小→大)'
-    SearchQueryPage:
-      name: page
-      in: query
-      required: false
-      schema:
-        type: integer
-        minimum: 1
-      description: 'ページ番号 (NOTE: 1ページ辺りの応答は20件)'
-    SearchQueryMylistAllow:
-      name: with_mylisted
-      in: query
-      required: false
-      schema:
-        type: integer
-        format: int32
-        default: 1
-        enum:
-          - 1
-          - 0
-        example: 1
-        minimum: 0
-        maximum: 1
-      description: マイリスト追加済みかを取得する0/1 (デフォルト1)
-    SearchQueryMylistDeny:
-      name: with_mylisted
-      in: query
-      schema:
-        type: integer
-        enum:
-          - 0
-          - 1
-        example: 0
-        default: 0
-        minimum: 0
-        maximum: 1
-      description: マイリスト追加済みかを取得する0/1 (デフォルト0)
-    SearchQueryPerPage:
-      name: per_page
-      in: query
-      required: false
-      schema:
-        type: integer
-        default: 20
-        enum:
+      title: LightAccountStruct
+      type: object
+      x-examples:
+        example:
+          accountID: 1
+          name: お窓
+    LightArtStruct:
+      description: イラスト情報の簡易構造体(読み取り専用)(検索結果等で利用)
+      properties:
+        artID:
+          description: イラストID
+          example: 1
+          minimum: 1
+          type: integer
+        artists:
+          description: 絵師情報(複数可)
+          items:
+            $ref: '#/components/schemas/LightArtistStruct'
+          type: array
+        caption:
+          description: '説明文
+
+            NOTE: 通常出典記載の説明文と同じ物が入る'
+          example: Ｃ８９の新刊表紙となっていますっ
+          minLength: 1
+          type: string
+        datetime:
+          description: 登録日(%Y-%m-%d %H:%M:%S)
+          example: '2015-12-27T07:29:00Z'
+          format: date-time
+          type: string
+        file:
+          properties:
+            ipfsHash:
+              description: IPFSのハッシュ情報
+              properties:
+                orig:
+                  description: Raw画像ハッシュ
+                  example: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                  maxLength: 100
+                  type: string
+                thumb:
+                  description: サムネイルハッシュ
+                  example: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                  maxLength: 100
+                  type: string
+              type: object
+          type: object
+        likes:
+          default: 0
+          description: 累計いいね数
+          example: 0
+          format: int64
+          minimum: 0
+          type: integer
+        mylisted:
+          default: false
+          description: リクエストしたユーザーがマイリストしているか
+          type: boolean
+        mylists:
+          default: 0
+          description: マイリスト済みのユーザー数
+          example: 0
+          format: int64
+          minimum: 0
+          type: integer
+        nsfw:
+          default: false
+          description: アダルトコンテンツか否か
+          type: boolean
+        originService:
+          description: 出典のサービス名
+          example: Pixiv
+          minLength: 1
+          type: string
+        originUrl:
+          description: 出典URL
+          example: https://www.pixiv.net/artworks/54265978
+          format: uri-reference
+          minLength: 1
+          type: string
+        page:
+          default: 1
+          description: グループになっている場合のページ番号
+          example: 1
+          format: int32
+          minimum: 1
+          type: integer
+        similarity:
+          description: 元画像との類似度(画像検索のみ)
+          maximum: 1
+          minimum: 0
+          type: number
+        title:
+          description: イラスト(作品)名
+          example: 魔法少女は深淵になにをみるか？
+          minLength: 1
+          type: string
+        uploader:
+          $ref: '#/components/schemas/LightAccountStruct'
+        views:
+          default: 0
+          description: 累計閲覧数
+          example: 0
+          format: int64
+          minimum: 0
+          type: integer
+      title: LightArtStruct
+      type: object
+      x-examples:
+        example:
+          artID: 1
+          artists:
+          - artistID: 1
+            name: 彩電
+          caption: Ｃ８９の新刊表紙となっていますっ
+          datetime: '2015-12-27T07:29:00Z'
+          file:
+            ipfsHash:
+              orig: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+              thumb: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+          likes: 0
+          mylisted: false
+          mylists: 0
+          nsfw: false
+          originService: Pixiv
+          originUrl: https://www.pixiv.net/artworks/54265978
+          page: 1
+          similarity: 0
+          title: 魔法少女は深淵になにをみるか？
+          uploader:
+            accountID: 1
+            name: お窓
+          views: 0
+    LightArtistStruct:
+      description: 絵師情報の簡易構造体(読み取り専用)
+      properties:
+        artistID:
+          example: 1
+          type: integer
+        name:
+          example: 彩電
+          type: string
+      title: LightArtistStruct
+      type: object
+      x-examples:
+        example:
+          artistID: 1
+          name: 彩電
+    NavigationStruct:
+      description: サイト内上部ナビゲーション情報の構造体(読み取り専用)
+      properties:
+        count:
+          example: 1204
+          minimum: 1
+          type: integer
+        id:
+          example: 1
+          minimum: 1
+          type: integer
+        name:
+          example: 香風智乃
+          maxLength: 50
+          minLength: 1
+          type: string
+      required:
+      - name
+      - id
+      - count
+      title: NavigationStruct
+      type: object
+      x-examples:
+        example:
+          count: 1204
+          id: 1
+          name: 香風智乃
+    PaginationStruct:
+      description: ページネーション情報の構造体
+      properties:
+        count:
+          default: 0
+          description: ヒット総数
+          example: 1
+          minimum: 0
+          type: integer
+        current:
+          default: 1
+          description: 現在のページ
+          example: 1
+          minimum: 1
+          type: integer
+        pages:
+          default: 1
+          description: ページ数
+          example: 1
+          minimum: 1
+          type: integer
+        perPage:
+          default: 20
+          description: ページ毎の取得数
+          enum:
           - 20
           - 40
           - 60
           - 80
           - 100
-        example: 20
-        minimum: 20
-        maximum: 100
-      description: 1ページ辺りの要素数
-    SearchQuerySortCatalog:
-      in: query
-      schema:
-        type: string
-        default: d
-        enum:
-          - c
-          - d
-          - l
-          - 'n'
-        example: d
-      description: 'ソート方法 c:ヒット数 d:最終更新 l:いいね数 n:名前'
-      name: sort
+          example: 20
+          format: int32
+          maximum: 100
+          minimum: 20
+          type: integer
+        title:
+          description: ページネーションタイトル(表示用)
+          example: 香風智乃
+          minLength: 1
+          type: string
+        type:
+          default: tag
+          description: ページネーション種別(表示用)
+          enum:
+          - artist
+          - tag
+          - uploader
+          - notify-client
+          - notify-condition
+          - mute
+          - follow
+          - article
+          - mylist-list
+          - art
+          - upload-history
+          example: tag
+          type: string
+      required:
+      - title
+      - type
+      - count
+      - current
+      - pages
+      - perPage
+      title: PaginationStruct
+      type: object
+      x-examples:
+        example:
+          count: 1
+          current: 1
+          pages: 1
+          perPage: 20
+          title: 香風智乃
+          type: tag
+    PostUploadRequest:
+      description: ファイルをアップロードする際の要求構造体
+      properties:
+        file:
+          description: 投稿するファイル本体
+          format: binary
+          type: string
+      required:
+      - file
+      title: PostUploadRequest
+      type: object
+    PostUploadResponse:
+      description: ファイルをアップロードした際の応答構造体
+      properties:
+        url:
+          description: 投稿したファイルのURL(有効期限は1時間とする)
+          type: string
+      title: PostUploadResponse
+      type: object
+      x-examples:
+        success:
+          url: https://example.com/hogehoge.jpg
+    UploadHistoryStruct:
+      description: 投稿履歴の応答構造体
+      properties:
+        accountID:
+          description: 情報作成者のアカウントID
+          example: 1
+          minimum: 1
+          type: integer
+        artID:
+          description: 投稿に成功した場合入るID
+          example: 1
+          format: int32
+          minimum: 1
+          type: integer
+        finished:
+          description: データ登録完了時刻
+          example: '2021-02-21 22:24:27'
+          maxLength: 19
+          minLength: 19
+          type: string
+        started:
+          description: データ登録処理開始時刻
+          example: '2021-02-21 22:24:22'
+          maxLength: 19
+          minLength: 19
+          type: string
+        status:
+          default: 0
+          description: 登録処理結果 5:成功 9:内部エラー
+          enum:
+          - 0
+          - 5
+          - 9
+          example: 5
+          maximum: 9
+          minimum: 0
+          type: integer
+        uploadID:
+          description: 通し投稿履歴番号(インデックス用)
+          example: 1
+          format: int32
+          minimum: 1
+          type: integer
+      required:
+      - uploadID
+      - accountID
+      - started
+      - finished
+      - status
+      - artID
+      title: UploadHistory
+      type: object
+      x-examples:
+        example:
+          accountID: 1
+          artID: 9381
+          finished: '2021-02-21 22:24:27'
+          started: '2021-02-21 22:24:22'
+          status: 5
+          uploadID: 12045
+    UploaderStruct:
+      description: 投稿者情報の応答構造体
+      properties:
+        accountID:
+          description: ユーザーID
+          example: 1
+          minimum: 1
+          type: integer
+        count:
+          description: 投稿数
+          example: 1
+          minimum: 0
+          type: integer
+        lcount:
+          description: 得たいいね数
+          example: 1
+          minimum: 0
+          type: integer
+        name:
+          description: ユーザー名
+          example: お窓
+          maxLength: 40
+          minLength: 1
+          type: string
+      required:
+      - accountID
+      - name
+      - count
+      - lcount
+      title: UploaderStruct
+      type: object
+      x-examples:
+        example:
+          accountID: 1
+          count: 1
+          lcount: 1
+          name: お窓
   securitySchemes:
     Authorization:
-      type: http
       scheme: bearer
-tags:
-  - name: upload
+      type: http
+info:
+  contact:
+    email: dsgamer777@gmail.com
+    name: Omado
+    url: https://twitter.com/shallow_omado
+  description: Upload related api (required)
+  license:
+    name: AGPLv3
+    url: https://www.gnu.org/licenses/agpl-3.0.ja.html
+  title: UsagiBooru Upload API
+  version: '2.0'
+openapi: 3.0.0
+paths:
+  /accounts/{accountID}/upload_history:
+    get:
+      description: イラスト投稿履歴を取得します
+      operationId: getUploadHistory
+      parameters:
+      - $ref: '#/components/parameters/SearchQueryPage'
+      - description: ソート方法 d:最終更新
+        in: query
+        name: sort
+        schema:
+          enum:
+          - d
+          example: d
+          maxLength: 1
+          minLength: 1
+          type: string
+      - $ref: '#/components/parameters/SearchQueryOrder'
+      - $ref: '#/components/parameters/SearchQueryPerPage'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUploadHistoryResponse'
+          description: OK
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+      summary: Get upload history
+      tags:
+      - accounts
+    parameters:
+    - description: 取得したいユーザーのアカウントID
+      in: path
+      name: accountID
+      required: true
+      schema:
+        type: integer
+  /activitypub/uploader/{accountID}:
+    get:
+      description: 'ActivityPubのユーザー情報(投稿者)を返す
+
+        (実際使うときは https://example.com/uploader/{displayID} からリダイレクト?)'
+      operationId: getActivityPubUploaderActor
+      responses:
+        '200':
+          content:
+            application/activity+json:
+              schema:
+                $ref: '#/components/schemas/ActivityPubActorStruct'
+          description: OK
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+      summary: Get activitypub uploader actor
+      tags:
+      - activitypub
+    parameters:
+    - description: 対象のアカウントID
+      in: path
+      name: accountID
+      required: true
+      schema:
+        type: string
+  /activitypub/uploader/{accountID}/outbox:
+    get:
+      description: 他のサーバーがこのユーザーのメッセージを受け取るときにGETされる
+      operationId: getActivityPubUploaderOutbox
+      responses:
+        '200':
+          content:
+            application/activity+json:
+              schema:
+                $ref: '#/components/schemas/GetActivityPubGeneralResponse'
+          description: OK
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+      summary: Provide federation user message
+      tags:
+      - activitypub
+    parameters:
+    - description: 対象のアカウントID
+      in: path
+      name: accountID
+      required: true
+      schema:
+        type: integer
+  /catalog/uploaders:
+    get:
+      description: 投稿者一覧を取得します
+      operationId: getUploaderList
+      parameters:
+      - $ref: '#/components/parameters/SearchQueryPage'
+      - $ref: '#/components/parameters/SearchQuerySort'
+      - $ref: '#/components/parameters/SearchQueryOrder'
+      - $ref: '#/components/parameters/SearchQueryPerPage'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetCatalogUploaderResponse'
+          description: OK
+      summary: Get uploader list
+      tags:
+      - catalog
+  /navigations/uploaders:
+    get:
+      description: 'イラスト数の多い投稿者上位5件を取得します
+
+        サイト内上部 ナビゲーションメニューで使用しています'
+      operationId: getUploaderNavigation
+      responses:
+        '200':
+          content:
+            application/json:
+              examples: {}
+              schema:
+                $ref: '#/components/schemas/GetNavigationGeneralResponse'
+          description: 応答のdataに配列で返却されます
+      summary: Get uploader navigation tab (for site)
+      tags:
+      - navigations
+  /search/uploaders:
+    get:
+      description: 指定した投稿者のイラスト一覧を取得します
+      operationId: searchArtByUploader
+      parameters:
+      - $ref: '#/components/parameters/SearchQuerySort'
+      - $ref: '#/components/parameters/SearchQueryOrder'
+      - $ref: '#/components/parameters/SearchQueryPage'
+      - $ref: '#/components/parameters/SearchQueryMylistAllow'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSearchGeneralResponse'
+          description: OK
+      summary: Search by uploader
+      tags:
+      - search
+  /upload:
+    post:
+      description: '画像や動画を投稿するエンドポイントです
+
+        むやみに利用するとアカウントが停止される可能性があります'
+      operationId: uploadContent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostUploadRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostUploadResponse'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Bad Request
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Forbidden
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Too Many Requests
+      summary: Upload content
+      tags:
+      - upload
 security:
-  - Authorization: []
+- Authorization: []
+servers:
+- description: Prod
+  url: https://api.gochiusa.team
+- description: Staging
+  url: https://api-next.gochiusa.team
+- description: Dev
+  url: http://127.0.0.1:8080
+tags:
+- name: navigations
+- name: upload
+- name: search
+- name: catalog
+- name: activitypub
+- name: accounts

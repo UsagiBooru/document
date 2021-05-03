@@ -1,369 +1,376 @@
-openapi: 3.0.0
-info:
-  title: UsagiBooru News API
-  version: '2.0'
-  contact:
-    name: Omado
-    url: 'https://twitter.com/shallow_omado'
-    email: dsgamer777@gmail.com
-  description: |-
-    お知らせ関連API
-    (Optional)
-  license:
-    name: GPLv3
-    url: 'https://www.gnu.org/licenses/gpl-3.0.ja.html'
-servers:
-  - url: 'http://127.0.0.1:8080'
-    description: Dev
-paths:
-  '/news/{newsID}':
-    parameters:
-      - schema:
-          type: integer
-          minimum: 1
-          exclusiveMinimum: true
-        name: newsID
-        in: path
-        required: true
-        description: 対象のニュースID
-    get:
-      summary: Get news
-      tags:
-        - news
-      responses:
-        '200':
-          description: 応答のdataに返却されます
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NewsStruct'
-              examples: {}
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      operationId: getNews
-      description: 指定したニュースの内容を取得します
-    delete:
-      summary: Delete news
-      operationId: deleteNews
-      responses:
-        '204':
-          description: No Content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      tags:
-        - news
-      description: |-
-        指定したニュースを削除します
-        管理者のみリクエストできます
-    patch:
-      summary: Edit news
-      operationId: editNews
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NewsStruct'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      tags:
-        - news
-      description: |-
-        指定したニュースのタイトル/本文/カラーを編集します
-        管理者のみリクエストできます
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NewsStruct'
-  /news:
-    post:
-      summary: Add news
-      operationId: addNews
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NewsStruct'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      description: |-
-        ニュースを追加します
-        (管理者のみリクエストできます)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NewsStruct'
-      tags:
-        - news
-    get:
-      summary: Get all news
-      operationId: getNewsList
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetNewsListResponse'
-      description: ニュース一覧を取得します
-      tags:
-        - news
-      parameters:
-        - $ref: '#/components/parameters/SearchQuerySort'
-        - $ref: '#/components/parameters/SearchQueryOrder'
-        - $ref: '#/components/parameters/SearchQueryPage'
-        - $ref: '#/components/parameters/SearchQueryPerPage'
 components:
+  parameters:
+    SearchQueryMylistAllow:
+      description: マイリスト追加済みかを取得する0/1 (デフォルト1)
+      in: query
+      name: with_mylisted
+      required: false
+      schema:
+        default: 1
+        enum:
+        - 1
+        - 0
+        example: 1
+        format: int32
+        maximum: 1
+        minimum: 0
+        type: integer
+    SearchQueryMylistDeny:
+      description: マイリスト追加済みかを取得する0/1 (デフォルト0)
+      in: query
+      name: with_mylisted
+      schema:
+        default: 0
+        enum:
+        - 0
+        - 1
+        example: 0
+        maximum: 1
+        minimum: 0
+        type: integer
+    SearchQueryOrder:
+      description: ソート方向 d:降順(大→小) a:昇順(小→大)
+      in: query
+      name: order
+      required: false
+      schema:
+        default: d
+        enum:
+        - d
+        - a
+        example: d
+        maxLength: 1
+        minLength: 1
+        type: string
+    SearchQueryPage:
+      description: 'ページ番号 (NOTE: 1ページ辺りの応答は20件)'
+      in: query
+      name: page
+      required: false
+      schema:
+        minimum: 1
+        type: integer
+    SearchQueryPerPage:
+      description: 1ページ辺りの要素数
+      in: query
+      name: per_page
+      required: false
+      schema:
+        default: 20
+        enum:
+        - 20
+        - 40
+        - 60
+        - 80
+        - 100
+        example: 20
+        maximum: 100
+        minimum: 20
+        type: integer
+    SearchQuerySort:
+      description: ソート方法 l:いいね数順 d:投稿日順
+      in: query
+      name: sort
+      required: false
+      schema:
+        default: d
+        enum:
+        - l
+        - d
+        example: d
+        type: string
+    SearchQuerySortCatalog:
+      description: ソート方法 c:ヒット数 d:最終更新 l:いいね数 n:名前
+      in: query
+      name: sort
+      schema:
+        default: d
+        enum:
+        - c
+        - d
+        - l
+        - n
+        example: d
+        type: string
   schemas:
-    NewsStruct:
-      title: NewsStruct
-      type: object
-      description: サイト内の新着情報モデル。
-      x-examples:
-        example:
-          newsID: 1
-          date: '2021-03-22'
-          color: 1
-          title: Welcome to UsagiBooru!
-          body: This is next generation imageboard. This is challenge. I hope someone loves this project.
-          author:
-            accountID: 1
-            name: お窓
-      properties:
-        newsID:
-          type: integer
-          description: ニュースID
-          minimum: 1
-          example: 1
-        date:
-          type: string
-          description: 投稿日付時刻
-          format: date
-          example: '2021-03-22'
-        color:
-          type: integer
-          maximum: 9
-          minimum: 1
-          description: ニュース表記色(色はフロントエンドの実装次第)
-          default: 1
-          example: 1
-        title:
-          type: string
-          minLength: 1
-          maxLength: 50
-          description: ニュースタイトル 50文字まで
-          example: Welcome to UsagiBooru!
-        body:
-          type: string
-          minLength: 1
-          maxLength: 3000
-          description: ニュース本文 3000文字まで
-          example: This is next generation imageboard. This is challenge. I hope someone loves this project.
-        author:
-          $ref: '#/components/schemas/LightAccountStruct'
     GeneralMessageResponse:
-      title: GeneralMessageResponse
-      type: object
+      description: 共通の応答構造体(404/401/400等を返す際に使用)
       properties:
         message:
-          type: string
           description: 応答メッセージ(何が間違っているかの詳細)
           minLength: 1
+          type: string
       required:
-        - message
+      - message
+      title: GeneralMessageResponse
+      type: object
       x-examples:
-        not-found:
-          message: Specified content was not found.
-        no-permission:
-          message: You don't have enough permission to do it.
         bad-request:
           message: Your request body is wrong.
         locked:
           message: Specified content is referenced from other content.
+        no-permission:
+          message: You don't have enough permission to do it.
+        not-found:
+          message: Specified content was not found.
     GetNewsListResponse:
+      description: ニュース情報一覧の応答構造体
+      properties:
+        news:
+          items:
+            $ref: '#/components/schemas/NewsStruct'
+          type: array
       title: GetNewsListResponse
       type: object
       x-examples:
         example:
           news:
-            - newsID: 1
-              date: '2021-03-22'
-              color: 1
-              title: Welcome to UsagiBooru!
-              body: This is next generation imageboard. This is challenge for me. I hope someone loves this project.
-              author:
-                accountID: 1
-                name: お窓
-      description: ''
-      properties:
-        news:
-          type: array
-          items:
-            $ref: '#/components/schemas/NewsStruct'
+          - author:
+              accountID: 1
+              name: お窓
+            body: This is next generation imageboard. This is challenge for me. I
+              hope someone loves this project.
+            color: 1
+            date: '2021-03-22'
+            newsID: 1
+            title: Welcome to UsagiBooru!
     LightAccountStruct:
+      description: アカウント情報の簡易構造体(読み取り専用)
+      properties:
+        accountID:
+          description: アカウントID
+          example: 1
+          minimum: 1
+          type: integer
+        name:
+          description: アカウント名
+          example: お窓
+          type: string
       title: LightAccountStruct
       type: object
       x-examples:
         example:
           accountID: 1
           name: お窓
+    NewsStruct:
+      description: サイト内ニュース情報の構造体
       properties:
-        accountID:
+        author:
+          $ref: '#/components/schemas/LightAccountStruct'
+        body:
+          description: ニュース本文 3000文字まで
+          example: This is next generation imageboard. This is challenge. I hope someone
+            loves this project.
+          maxLength: 3000
+          minLength: 1
+          type: string
+        color:
+          default: 1
+          description: ニュース表記色(色はフロントエンドの実装次第)
+          example: 1
+          maximum: 9
+          minimum: 1
           type: integer
-          description: アカウントID
+        date:
+          description: 投稿日付時刻
+          example: '2021-03-22'
+          format: date
+          type: string
+        newsID:
+          description: ニュースID
           example: 1
           minimum: 1
-        name:
+          type: integer
+        title:
+          description: ニュースタイトル 50文字まで
+          example: Welcome to UsagiBooru!
+          maxLength: 50
+          minLength: 1
           type: string
-          description: アカウント名
-          example: お窓
-  parameters:
-    SearchQuerySort:
-      name: sort
-      in: query
-      required: false
-      schema:
-        type: string
-        enum:
-          - l
-          - d
-        example: d
-        default: d
-      description: 'ソート方法 l:いいね数順 d:投稿日順'
-    SearchQueryOrder:
-      name: order
-      in: query
-      required: false
-      schema:
-        type: string
-        enum:
-          - d
-          - a
-        default: d
-        example: d
-        minLength: 1
-        maxLength: 1
-      description: 'ソート方向 d:降順(大→小) a:昇順(小→大)'
-    SearchQueryPage:
-      name: page
-      in: query
-      required: false
-      schema:
-        type: integer
-        minimum: 1
-      description: 'ページ番号 (NOTE: 1ページ辺りの応答は20件)'
-    SearchQueryMylistAllow:
-      name: with_mylisted
-      in: query
-      required: false
-      schema:
-        type: integer
-        format: int32
-        default: 1
-        enum:
-          - 1
-          - 0
-        example: 1
-        minimum: 0
-        maximum: 1
-      description: マイリスト追加済みかを取得する0/1 (デフォルト1)
-    SearchQueryMylistDeny:
-      name: with_mylisted
-      in: query
-      schema:
-        type: integer
-        enum:
-          - 0
-          - 1
-        example: 0
-        default: 0
-        minimum: 0
-        maximum: 1
-      description: マイリスト追加済みかを取得する0/1 (デフォルト0)
-    SearchQueryPerPage:
-      name: per_page
-      in: query
-      required: false
-      schema:
-        type: integer
-        default: 20
-        enum:
-          - 20
-          - 40
-          - 60
-          - 80
-          - 100
-        example: 20
-        minimum: 20
-        maximum: 100
-      description: 1ページ辺りの要素数
-    SearchQuerySortCatalog:
-      in: query
-      schema:
-        type: string
-        default: d
-        enum:
-          - c
-          - d
-          - l
-          - 'n'
-        example: d
-      description: 'ソート方法 c:ヒット数 d:最終更新 l:いいね数 n:名前'
-      name: sort
+      title: NewsStruct
+      type: object
+      x-examples:
+        example:
+          author:
+            accountID: 1
+            name: お窓
+          body: This is next generation imageboard. This is challenge. I hope someone
+            loves this project.
+          color: 1
+          date: '2021-03-22'
+          newsID: 1
+          title: Welcome to UsagiBooru!
   securitySchemes:
     Authorization:
-      type: http
       scheme: bearer
-tags:
-  - name: news
+      type: http
+info:
+  contact:
+    email: dsgamer777@gmail.com
+    name: Omado
+    url: https://twitter.com/shallow_omado
+  description: News related api (optional)
+  license:
+    name: AGPLv3
+    url: https://www.gnu.org/licenses/agpl-3.0.ja.html
+  title: UsagiBooru News API
+  version: '2.0'
+openapi: 3.0.0
+paths:
+  /news:
+    get:
+      description: ニュース一覧を取得します
+      operationId: getNewsList
+      parameters:
+      - $ref: '#/components/parameters/SearchQuerySort'
+      - $ref: '#/components/parameters/SearchQueryOrder'
+      - $ref: '#/components/parameters/SearchQueryPage'
+      - $ref: '#/components/parameters/SearchQueryPerPage'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetNewsListResponse'
+          description: OK
+      summary: Get all news
+      tags:
+      - news
+    post:
+      description: 'ニュースを追加します
+
+        (管理者のみリクエストできます)'
+      operationId: addNews
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsStruct'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewsStruct'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Bad Request
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Forbidden
+      summary: Add news
+      tags:
+      - news
+  /news/{newsID}:
+    delete:
+      description: '指定したニュースを削除します
+
+        管理者のみリクエストできます'
+      operationId: deleteNews
+      responses:
+        '204':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: No Content
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+      summary: Delete news
+      tags:
+      - news
+    get:
+      description: 指定したニュースの内容を取得します
+      operationId: getNews
+      responses:
+        '200':
+          content:
+            application/json:
+              examples: {}
+              schema:
+                $ref: '#/components/schemas/NewsStruct'
+          description: 応答のdataに返却されます
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+      summary: Get news
+      tags:
+      - news
+    parameters:
+    - description: 対象のニュースID
+      in: path
+      name: newsID
+      required: true
+      schema:
+        exclusiveMinimum: true
+        minimum: 1
+        type: integer
+    patch:
+      description: '指定したニュースのタイトル/本文/カラーを編集します
+
+        管理者のみリクエストできます'
+      operationId: editNews
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsStruct'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewsStruct'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Bad Request
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+      summary: Edit news
+      tags:
+      - news
 security:
-  - Authorization: []
+- Authorization: []
+servers:
+- description: Prod
+  url: https://api.gochiusa.team
+- description: Staging
+  url: https://api-next.gochiusa.team
+- description: Dev
+  url: http://127.0.0.1:8080
+tags:
+- name: news

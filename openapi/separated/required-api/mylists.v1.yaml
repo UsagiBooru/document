@@ -1,281 +1,511 @@
-openapi: 3.0.0
-info:
-  title: UsagiBooru Mylists API
-  version: '2.0'
-  contact:
-    name: Omado
-    url: 'https://twitter.com/shallow_omado'
-    email: dsgamer777@gmail.com
-  description: マイリスト関連API
-  license:
-    name: GPLv3
-    url: 'https://www.gnu.org/licenses/gpl-3.0.ja.html'
-servers:
-  - url: 'http://127.0.0.1:8080'
-    description: Dev
-paths:
-  '/mylists/{mylistID}':
-    parameters:
-      - schema:
-          type: integer
-        name: mylistID
-        in: path
-        required: true
-        description: 対象のマイリストID
-    get:
-      summary: Get mylist data
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MylistStruct'
-              examples: {}
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      operationId: getMylist
-      description: 指定したマイリストに登録されたイラスト一覧を取得します
-      parameters: []
-      tags:
-        - mylists
-    delete:
-      summary: Delete mylist
-      operationId: deleteMylist
-      description: マイリストを削除します
-      responses:
-        '204':
-          description: No Content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      tags:
-        - mylists
-    patch:
-      summary: Edit mylist
-      operationId: editMylist
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MylistStruct'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      description: マイリストのタイトル/説明文/内容(イラスト)を編集します
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MylistStruct'
-        description: 変更したいものを指定してリクエストします
-      tags:
-        - mylists
-  '/mylists/{mylistID}/finds':
-    parameters:
-      - schema:
-          type: integer
-        name: mylistID
-        in: path
-        required: true
-        description: 対象のマイリストID
-    post:
-      summary: Find arts registered
-      operationId: findInMylistByIds
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PostMylistFindsResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralMessageResponse'
-      description: |-
-        指定したイラスト(単数/複数)がマイリストに含まれているかを判定します
-        検索リクエストでwith_mylisted=0としている場合、必要となる可能性があります
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PostMylistFindsRequest'
-      tags:
-        - mylists
-  /mylists:
-    get:
-      summary: Get mylist list
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetMylistListResponse'
-      operationId: getMylists
-      description: 全ユーザーの作成したマイリスト一覧を取得します
-      parameters:
-        - schema:
-            type: boolean
-          in: query
-          name: force_all
-          description: 管理者の場合非公開含めて一括取得できる
-      tags:
-        - mylists
 components:
+  parameters:
+    SearchQueryMylistAllow:
+      description: マイリスト追加済みかを取得する0/1 (デフォルト1)
+      in: query
+      name: with_mylisted
+      required: false
+      schema:
+        default: 1
+        enum:
+        - 1
+        - 0
+        example: 1
+        format: int32
+        maximum: 1
+        minimum: 0
+        type: integer
+    SearchQueryMylistDeny:
+      description: マイリスト追加済みかを取得する0/1 (デフォルト0)
+      in: query
+      name: with_mylisted
+      schema:
+        default: 0
+        enum:
+        - 0
+        - 1
+        example: 0
+        maximum: 1
+        minimum: 0
+        type: integer
+    SearchQueryOrder:
+      description: ソート方向 d:降順(大→小) a:昇順(小→大)
+      in: query
+      name: order
+      required: false
+      schema:
+        default: d
+        enum:
+        - d
+        - a
+        example: d
+        maxLength: 1
+        minLength: 1
+        type: string
+    SearchQueryPage:
+      description: 'ページ番号 (NOTE: 1ページ辺りの応答は20件)'
+      in: query
+      name: page
+      required: false
+      schema:
+        minimum: 1
+        type: integer
+    SearchQueryPerPage:
+      description: 1ページ辺りの要素数
+      in: query
+      name: per_page
+      required: false
+      schema:
+        default: 20
+        enum:
+        - 20
+        - 40
+        - 60
+        - 80
+        - 100
+        example: 20
+        maximum: 100
+        minimum: 20
+        type: integer
+    SearchQuerySort:
+      description: ソート方法 l:いいね数順 d:投稿日順
+      in: query
+      name: sort
+      required: false
+      schema:
+        default: d
+        enum:
+        - l
+        - d
+        example: d
+        type: string
+    SearchQuerySortCatalog:
+      description: ソート方法 c:ヒット数 d:最終更新 l:いいね数 n:名前
+      in: query
+      name: sort
+      schema:
+        default: d
+        enum:
+        - c
+        - d
+        - l
+        - n
+        example: d
+        type: string
   schemas:
-    MylistStruct:
-      title: MylistStruct
-      type: object
-      x-examples:
-        example:
-          mylistID: 1
-          name: お窓のマイリスト
-          description: ユーザーデフォルトマイリスト
-          createdDate: '2021-03-14T02:16:03Z'
-          updatedDate: '2021-03-14T02:16:03Z'
-          private: true
-          arts:
-            - artID: 0
-              title: string
-              caption: string
-              datetime: '2021-01-07 12:48:42'
-              page: 0
-              likes: 0
-              views: 0
-              mylists: 0
-              mylisted: true
-              uploader:
-                accountID: 1
-                name: お窓
-              artists:
-                - artistID: 1
-                  name: 彩電
-              originUrl: string
-              originService: string
-              nsfw: true
-              file:
-                ipfsHash:
-                  thumb: string
-                  orig: string
-              similarity: 0
-          owner:
-            accountID: 1
-            name: お窓
-      properties:
-        mylistID:
-          type: integer
-          description: マイリストID
-          example: 1
-          minimum: 1
-        name:
-          type: string
-          description: マイリスト名
-          minLength: 1
-          example: お窓のマイリスト
-        description:
-          type: string
-          description: マイリスト説明文
-          example: ユーザーデフォルトマイリスト
-        createdDate:
-          type: string
-          description: マイリスト作成日時
-          format: date-time
-          example: '2021-03-14T02:16:03Z'
-        updatedDate:
-          type: string
-          description: マイリスト更新日時
-          format: date-time
-          example: '2021-03-14T02:16:03Z'
-        private:
-          type: boolean
-          description: 公開/非公開
-          default: true
-        arts:
-          type: array
-          description: イラストID一覧
-          items:
-            $ref: '#/components/schemas/LightArtStruct'
-        owner:
-          $ref: '#/components/schemas/LightAccountStruct'
     GeneralMessageResponse:
-      title: GeneralMessageResponse
-      type: object
+      description: 共通の応答構造体(404/401/400等を返す際に使用)
       properties:
         message:
-          type: string
           description: 応答メッセージ(何が間違っているかの詳細)
           minLength: 1
+          type: string
       required:
-        - message
+      - message
+      title: GeneralMessageResponse
+      type: object
       x-examples:
-        not-found:
-          message: Specified content was not found.
-        no-permission:
-          message: You don't have enough permission to do it.
         bad-request:
           message: Your request body is wrong.
         locked:
           message: Specified content is referenced from other content.
-    PostMylistFindsRequest:
-      title: PostMylistFindsRequest
+        no-permission:
+          message: You don't have enough permission to do it.
+        not-found:
+          message: Specified content was not found.
+    GetMylistListResponse:
+      description: マイリスト情報一覧の応答構造体
+      properties:
+        contents:
+          items:
+            $ref: '#/components/schemas/MylistStruct'
+          minItems: 1
+          type: array
+          uniqueItems: true
+        pagination:
+          $ref: '#/components/schemas/PaginationStruct'
+      required:
+      - pagination
+      - contents
+      title: GetMylistListResponse
       type: object
+      x-examples:
+        example:
+          contents:
+          - arts:
+            - artID: 1
+              artists:
+              - artistID: 1
+                name: 彩電
+              caption: Ｃ８９の新刊表紙となっていますっ
+              datetime: '2015-12-27T07:29:00Z'
+              file:
+                ipfsHash:
+                  orig: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                  thumb: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+              likes: 0
+              mylisted: false
+              mylists: 0
+              nsfw: false
+              originService: Pixiv
+              originUrl: https://www.pixiv.net/artworks/54265978
+              page: 1
+              similarity: 0
+              title: 魔法少女は深淵になにをみるか？
+              uploader:
+                accountID: 1
+                name: お窓
+              views: 0
+            createdDate: '2021-03-14T02:16:03Z'
+            description: string
+            mylistID: 1
+            name: お窓のマイリスト
+            owner:
+              accountID: 1
+              name: お窓
+            private: true
+            updatedDate: '2021-03-14T02:16:03Z'
+          pagination:
+            count: 1
+            current: 1
+            pages: 1
+            perPage: 20
+            title: マイリスト一覧
+            type: mylist
+    LightAccountStruct:
+      description: アカウント情報の簡易構造体(読み取り専用)
+      properties:
+        accountID:
+          description: アカウントID
+          example: 1
+          minimum: 1
+          type: integer
+        name:
+          description: アカウント名
+          example: お窓
+          type: string
+      title: LightAccountStruct
+      type: object
+      x-examples:
+        example:
+          accountID: 1
+          name: お窓
+    LightArtStruct:
+      description: イラスト情報の簡易構造体(読み取り専用)(検索結果等で利用)
+      properties:
+        artID:
+          description: イラストID
+          example: 1
+          minimum: 1
+          type: integer
+        artists:
+          description: 絵師情報(複数可)
+          items:
+            $ref: '#/components/schemas/LightArtistStruct'
+          type: array
+        caption:
+          description: '説明文
+
+            NOTE: 通常出典記載の説明文と同じ物が入る'
+          example: Ｃ８９の新刊表紙となっていますっ
+          minLength: 1
+          type: string
+        datetime:
+          description: 登録日(%Y-%m-%d %H:%M:%S)
+          example: '2015-12-27T07:29:00Z'
+          format: date-time
+          type: string
+        file:
+          properties:
+            ipfsHash:
+              description: IPFSのハッシュ情報
+              properties:
+                orig:
+                  description: Raw画像ハッシュ
+                  example: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                  maxLength: 100
+                  type: string
+                thumb:
+                  description: サムネイルハッシュ
+                  example: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+                  maxLength: 100
+                  type: string
+              type: object
+          type: object
+        likes:
+          default: 0
+          description: 累計いいね数
+          example: 0
+          format: int64
+          minimum: 0
+          type: integer
+        mylisted:
+          default: false
+          description: リクエストしたユーザーがマイリストしているか
+          type: boolean
+        mylists:
+          default: 0
+          description: マイリスト済みのユーザー数
+          example: 0
+          format: int64
+          minimum: 0
+          type: integer
+        nsfw:
+          default: false
+          description: アダルトコンテンツか否か
+          type: boolean
+        originService:
+          description: 出典のサービス名
+          example: Pixiv
+          minLength: 1
+          type: string
+        originUrl:
+          description: 出典URL
+          example: https://www.pixiv.net/artworks/54265978
+          format: uri-reference
+          minLength: 1
+          type: string
+        page:
+          default: 1
+          description: グループになっている場合のページ番号
+          example: 1
+          format: int32
+          minimum: 1
+          type: integer
+        similarity:
+          description: 元画像との類似度(画像検索のみ)
+          maximum: 1
+          minimum: 0
+          type: number
+        title:
+          description: イラスト(作品)名
+          example: 魔法少女は深淵になにをみるか？
+          minLength: 1
+          type: string
+        uploader:
+          $ref: '#/components/schemas/LightAccountStruct'
+        views:
+          default: 0
+          description: 累計閲覧数
+          example: 0
+          format: int64
+          minimum: 0
+          type: integer
+      title: LightArtStruct
+      type: object
+      x-examples:
+        example:
+          artID: 1
+          artists:
+          - artistID: 1
+            name: 彩電
+          caption: Ｃ８９の新刊表紙となっていますっ
+          datetime: '2015-12-27T07:29:00Z'
+          file:
+            ipfsHash:
+              orig: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+              thumb: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
+          likes: 0
+          mylisted: false
+          mylists: 0
+          nsfw: false
+          originService: Pixiv
+          originUrl: https://www.pixiv.net/artworks/54265978
+          page: 1
+          similarity: 0
+          title: 魔法少女は深淵になにをみるか？
+          uploader:
+            accountID: 1
+            name: お窓
+          views: 0
+    LightArtistStruct:
+      description: 絵師情報の簡易構造体(読み取り専用)
+      properties:
+        artistID:
+          example: 1
+          type: integer
+        name:
+          example: 彩電
+          type: string
+      title: LightArtistStruct
+      type: object
+      x-examples:
+        example:
+          artistID: 1
+          name: 彩電
+    MylistStruct:
+      description: マイリスト情報の構造体
+      properties:
+        arts:
+          description: イラストID一覧
+          items:
+            $ref: '#/components/schemas/LightArtStruct'
+          type: array
+        createdDate:
+          description: マイリスト作成日時
+          example: '2021-03-14T02:16:03Z'
+          format: date-time
+          type: string
+        description:
+          description: マイリスト説明文
+          example: ユーザーデフォルトマイリスト
+          type: string
+        mylistID:
+          description: マイリストID
+          example: 1
+          minimum: 1
+          type: integer
+        name:
+          description: マイリスト名
+          example: お窓のマイリスト
+          minLength: 1
+          type: string
+        owner:
+          $ref: '#/components/schemas/LightAccountStruct'
+        private:
+          default: true
+          description: 公開/非公開
+          type: boolean
+        updatedDate:
+          description: マイリスト更新日時
+          example: '2021-03-14T02:16:03Z'
+          format: date-time
+          type: string
+      title: MylistStruct
+      type: object
+      x-examples:
+        example:
+          arts:
+          - artID: 0
+            artists:
+            - artistID: 1
+              name: 彩電
+            caption: string
+            datetime: '2021-01-07 12:48:42'
+            file:
+              ipfsHash:
+                orig: string
+                thumb: string
+            likes: 0
+            mylisted: true
+            mylists: 0
+            nsfw: true
+            originService: string
+            originUrl: string
+            page: 0
+            similarity: 0
+            title: string
+            uploader:
+              accountID: 1
+              name: お窓
+            views: 0
+          createdDate: '2021-03-14T02:16:03Z'
+          description: ユーザーデフォルトマイリスト
+          mylistID: 1
+          name: お窓のマイリスト
+          owner:
+            accountID: 1
+            name: お窓
+          private: true
+          updatedDate: '2021-03-14T02:16:03Z'
+    PaginationStruct:
+      description: ページネーション情報の構造体
+      properties:
+        count:
+          default: 0
+          description: ヒット総数
+          example: 1
+          minimum: 0
+          type: integer
+        current:
+          default: 1
+          description: 現在のページ
+          example: 1
+          minimum: 1
+          type: integer
+        pages:
+          default: 1
+          description: ページ数
+          example: 1
+          minimum: 1
+          type: integer
+        perPage:
+          default: 20
+          description: ページ毎の取得数
+          enum:
+          - 20
+          - 40
+          - 60
+          - 80
+          - 100
+          example: 20
+          format: int32
+          maximum: 100
+          minimum: 20
+          type: integer
+        title:
+          description: ページネーションタイトル(表示用)
+          example: 香風智乃
+          minLength: 1
+          type: string
+        type:
+          default: tag
+          description: ページネーション種別(表示用)
+          enum:
+          - artist
+          - tag
+          - uploader
+          - notify-client
+          - notify-condition
+          - mute
+          - follow
+          - article
+          - mylist-list
+          - art
+          - upload-history
+          example: tag
+          type: string
+      required:
+      - title
+      - type
+      - count
+      - current
+      - pages
+      - perPage
+      title: PaginationStruct
+      type: object
+      x-examples:
+        example:
+          count: 1
+          current: 1
+          pages: 1
+          perPage: 20
+          title: 香風智乃
+          type: tag
+    PostMylistFindsRequest:
+      description: マイリストにイラストが含まれているかを検索する要求構造体
       properties:
         id:
           description: 探したいイラストID
-          type: array
           items:
             type: integer
+          type: array
+      title: PostMylistFindsRequest
+      type: object
       x-examples:
         example:
           id:
-            - 1
-            - 2
-            - 3
+          - 1
+          - 2
+          - 3
     PostMylistFindsResponse:
+      description: マイリストにイラストが含まれているかを検索した結果の応答構造体
+      properties:
+        data:
+          additionalProperties:
+            description: 指定されたイラストIDをキーとして、それぞれ存在するかのboolean
+            type: string
+          type: object
       title: PostMylistFindsResponse
       type: object
       x-examples:
@@ -284,401 +514,257 @@ components:
             '1': true
             '2': false
             '3': true
-      properties:
-        data:
-          type: object
-          additionalProperties:
-            type: string
-            description: 指定されたイラストIDをキーとして、それぞれ存在するかのboolean
-    GetMylistListResponse:
-      description: ''
-      type: object
-      title: GetMylistListResponse
-      x-examples:
-        example:
-          pagination:
-            title: マイリスト一覧
-            type: mylist
-            count: 1
-            current: 1
-            pages: 1
-            perPage: 20
-          contents:
-            - mylistID: 1
-              name: お窓のマイリスト
-              description: string
-              createdDate: '2021-03-14T02:16:03Z'
-              updatedDate: '2021-03-14T02:16:03Z'
-              private: true
-              arts:
-                - artID: 1
-                  title: 魔法少女は深淵になにをみるか？
-                  caption: Ｃ８９の新刊表紙となっていますっ
-                  datetime: '2015-12-27T07:29:00Z'
-                  page: 1
-                  likes: 0
-                  views: 0
-                  mylists: 0
-                  mylisted: false
-                  uploader:
-                    accountID: 1
-                    name: お窓
-                  artists:
-                    - artistID: 1
-                      name: 彩電
-                  originUrl: 'https://www.pixiv.net/artworks/54265978'
-                  originService: Pixiv
-                  nsfw: false
-                  file:
-                    ipfsHash:
-                      thumb: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
-                      orig: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
-                  similarity: 0
-              owner:
-                accountID: 1
-                name: お窓
-      properties:
-        pagination:
-          $ref: '#/components/schemas/PaginationStruct'
-        contents:
-          type: array
-          uniqueItems: true
-          minItems: 1
-          items:
-            $ref: '#/components/schemas/MylistStruct'
-      required:
-        - pagination
-        - contents
-    LightArtistStruct:
-      title: LightArtistStruct
-      type: object
-      properties:
-        artistID:
-          type: integer
-          example: 1
-        name:
-          type: string
-          example: 彩電
-      x-examples:
-        example:
-          artistID: 1
-          name: 彩電
-    LightArtStruct:
-      title: LightArtStruct
-      type: object
-      x-examples:
-        example:
-          artID: 1
-          title: 魔法少女は深淵になにをみるか？
-          caption: Ｃ８９の新刊表紙となっていますっ
-          datetime: '2015-12-27T07:29:00Z'
-          page: 1
-          likes: 0
-          views: 0
-          mylists: 0
-          mylisted: false
-          uploader:
-            accountID: 1
-            name: お窓
-          artists:
-            - artistID: 1
-              name: 彩電
-          originUrl: 'https://www.pixiv.net/artworks/54265978'
-          originService: Pixiv
-          nsfw: false
-          file:
-            ipfsHash:
-              thumb: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
-              orig: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
-          similarity: 0
-      description: 検索の応答モデル。配列で並んで返される。
-      properties:
-        artID:
-          type: integer
-          description: イラストID
-          minimum: 1
-          example: 1
-        title:
-          type: string
-          minLength: 1
-          description: イラスト(作品)名
-          example: 魔法少女は深淵になにをみるか？
-        caption:
-          type: string
-          description: |-
-            説明文
-            NOTE: 通常出典記載の説明文と同じ物が入る
-          example: Ｃ８９の新刊表紙となっていますっ
-          minLength: 1
-        datetime:
-          type: string
-          example: '2015-12-27T07:29:00Z'
-          description: '登録日(%Y-%m-%d %H:%M:%S)'
-          format: date-time
-        page:
-          type: integer
-          description: グループになっている場合のページ番号
-          default: 1
-          example: 1
-          minimum: 1
-          format: int32
-        likes:
-          type: integer
-          description: 累計いいね数
-          minimum: 0
-          example: 0
-          default: 0
-          format: int64
-        views:
-          type: integer
-          description: 累計閲覧数
-          minimum: 0
-          example: 0
-          default: 0
-          format: int64
-        mylists:
-          type: integer
-          description: マイリスト済みのユーザー数
-          minimum: 0
-          example: 0
-          default: 0
-          format: int64
-        mylisted:
-          type: boolean
-          description: リクエストしたユーザーがマイリストしているか
-          default: false
-        uploader:
-          $ref: '#/components/schemas/LightAccountStruct'
-        artists:
-          type: array
-          description: 絵師情報(複数可)
-          items:
-            $ref: '#/components/schemas/LightArtistStruct'
-        originUrl:
-          type: string
-          minLength: 1
-          description: 出典URL
-          example: 'https://www.pixiv.net/artworks/54265978'
-          format: uri-reference
-        originService:
-          type: string
-          minLength: 1
-          description: 出典のサービス名
-          example: Pixiv
-        nsfw:
-          type: boolean
-          description: アダルトコンテンツか否か
-          default: false
-        file:
-          type: object
-          properties:
-            ipfsHash:
-              type: object
-              description: IPFSのハッシュ情報
-              properties:
-                thumb:
-                  type: string
-                  description: サムネイルハッシュ
-                  example: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
-                  maxLength: 100
-                orig:
-                  type: string
-                  description: Raw画像ハッシュ
-                  example: QmYQvXHGoiTdJuFLQWXQpMBz9V4254gNixLjPjMB2T4g5Y
-                  maxLength: 100
-        similarity:
-          type: number
-          description: 元画像との類似度(画像検索のみ)
-          minimum: 0
-          maximum: 1
-    LightAccountStruct:
-      title: LightAccountStruct
-      type: object
-      x-examples:
-        example:
-          accountID: 1
-          name: お窓
-      properties:
-        accountID:
-          type: integer
-          description: アカウントID
-          example: 1
-          minimum: 1
-        name:
-          type: string
-          description: アカウント名
-          example: お窓
-    PaginationStruct:
-      title: PaginationStruct
-      type: object
-      x-examples:
-        example:
-          title: 香風智乃
-          type: tag
-          count: 1
-          current: 1
-          pages: 1
-          perPage: 20
-      properties:
-        title:
-          type: string
-          minLength: 1
-          description: ページネーションタイトル(表示用)
-          example: 香風智乃
-        type:
-          type: string
-          description: ページネーション種別(表示用)
-          example: tag
-          enum:
-            - artist
-            - tag
-            - uploader
-            - notify-client
-            - notify-condition
-            - mute
-            - follow
-            - article
-            - mylist-list
-            - art
-            - upload-history
-          default: tag
-        count:
-          type: integer
-          example: 1
-          description: ヒット総数
-          minimum: 0
-          default: 0
-        current:
-          type: integer
-          description: 現在のページ
-          minimum: 1
-          example: 1
-          default: 1
-        pages:
-          type: integer
-          description: ページ数
-          minimum: 1
-          example: 1
-          default: 1
-        perPage:
-          type: integer
-          description: ページ毎の取得数
-          default: 20
-          example: 20
-          minimum: 20
-          enum:
-            - 20
-            - 40
-            - 60
-            - 80
-            - 100
-          maximum: 100
-          format: int32
-      required:
-        - title
-        - type
-        - count
-        - current
-        - pages
-        - perPage
-  parameters:
-    SearchQuerySort:
-      name: sort
-      in: query
-      required: false
-      schema:
-        type: string
-        enum:
-          - l
-          - d
-        example: d
-        default: d
-      description: 'ソート方法 l:いいね数順 d:投稿日順'
-    SearchQueryOrder:
-      name: order
-      in: query
-      required: false
-      schema:
-        type: string
-        enum:
-          - d
-          - a
-        default: d
-        example: d
-        minLength: 1
-        maxLength: 1
-      description: 'ソート方向 d:降順(大→小) a:昇順(小→大)'
-    SearchQueryPage:
-      name: page
-      in: query
-      required: false
-      schema:
-        type: integer
-        minimum: 1
-      description: 'ページ番号 (NOTE: 1ページ辺りの応答は20件)'
-    SearchQueryMylistAllow:
-      name: with_mylisted
-      in: query
-      required: false
-      schema:
-        type: integer
-        format: int32
-        default: 1
-        enum:
-          - 1
-          - 0
-        example: 1
-        minimum: 0
-        maximum: 1
-      description: マイリスト追加済みかを取得する0/1 (デフォルト1)
-    SearchQueryMylistDeny:
-      name: with_mylisted
-      in: query
-      schema:
-        type: integer
-        enum:
-          - 0
-          - 1
-        example: 0
-        default: 0
-        minimum: 0
-        maximum: 1
-      description: マイリスト追加済みかを取得する0/1 (デフォルト0)
-    SearchQueryPerPage:
-      name: per_page
-      in: query
-      required: false
-      schema:
-        type: integer
-        default: 20
-        enum:
-          - 20
-          - 40
-          - 60
-          - 80
-          - 100
-        example: 20
-        minimum: 20
-        maximum: 100
-      description: 1ページ辺りの要素数
-    SearchQuerySortCatalog:
-      in: query
-      schema:
-        type: string
-        default: d
-        enum:
-          - c
-          - d
-          - l
-          - 'n'
-        example: d
-      description: 'ソート方法 c:ヒット数 d:最終更新 l:いいね数 n:名前'
-      name: sort
   securitySchemes:
     Authorization:
-      type: http
       scheme: bearer
+      type: http
+info:
+  contact:
+    email: dsgamer777@gmail.com
+    name: Omado
+    url: https://twitter.com/shallow_omado
+  description: Mylists related api (required)
+  license:
+    name: AGPLv3
+    url: https://www.gnu.org/licenses/agpl-3.0.ja.html
+  title: UsagiBooru Mylists API
+  version: '2.0'
+openapi: 3.0.0
+paths:
+  /accounts/{accountID}/mylists:
+    get:
+      description: 指定したユーザーのマイリスト一覧を取得します
+      operationId: getUserMylists
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMylistListResponse'
+          description: OK
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+      summary: Get user mylists
+      tags:
+      - mylist
+    parameters:
+    - description: 対象のアカウントID
+      in: path
+      name: accountID
+      required: true
+      schema:
+        type: integer
+    post:
+      description: マイリストを作成します
+      operationId: createMylist
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MylistStruct'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MylistStruct'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Bad Request
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Forbidden
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Conflict
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Too Many Requests
+      summary: Create user mylist
+      tags:
+      - mylist
+  /mylists:
+    get:
+      description: 全ユーザーの作成したマイリスト一覧を取得します
+      operationId: getMylists
+      parameters:
+      - description: 管理者の場合非公開含めて一括取得できる
+        in: query
+        name: force_all
+        schema:
+          type: boolean
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMylistListResponse'
+          description: OK
+      summary: Get mylist list
+      tags:
+      - mylist
+  /mylists/{mylistID}:
+    delete:
+      description: マイリストを削除します
+      operationId: deleteMylist
+      responses:
+        '204':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: No Content
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+      summary: Delete mylist
+      tags:
+      - mylist
+    get:
+      description: 指定したマイリストに登録されたイラスト一覧を取得します
+      operationId: getMylist
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              examples: {}
+              schema:
+                $ref: '#/components/schemas/MylistStruct'
+          description: OK
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+      summary: Get mylist data
+      tags:
+      - mylist
+    parameters:
+    - description: 対象のマイリストID
+      in: path
+      name: mylistID
+      required: true
+      schema:
+        type: integer
+    patch:
+      description: マイリストのタイトル/説明文/内容(イラスト)を編集します
+      operationId: editMylist
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MylistStruct'
+        description: 変更したいものを指定してリクエストします
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MylistStruct'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Bad Request
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Not Found
+      summary: Edit mylist
+      tags:
+      - mylist
+  /mylists/{mylistID}/finds:
+    parameters:
+    - description: 対象のマイリストID
+      in: path
+      name: mylistID
+      required: true
+      schema:
+        type: integer
+    post:
+      description: '指定したイラスト(単数/複数)がマイリストに含まれているかを判定します
+
+        検索リクエストでwith_mylisted=0としている場合、必要となる可能性があります'
+      operationId: findInMylistByIds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostMylistFindsRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostMylistFindsResponse'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralMessageResponse'
+          description: Bad Request
+      summary: Find arts registered
+      tags:
+      - mylist
 security:
-  - Authorization: []
+- Authorization: []
+servers:
+- description: Prod
+  url: https://api.gochiusa.team
+- description: Staging
+  url: https://api-next.gochiusa.team
+- description: Dev
+  url: http://127.0.0.1:8080
 tags:
-  - name: mylists
+- name: mylist
